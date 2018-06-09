@@ -24,4 +24,8 @@
   * `rsync -ua --progress --exclude rsyncignore.txt ~/fastai/courses/dl1/ mlp1:/home/s1791387/myfastai/fastai/courses/dl1/`
 
 ## Wednesday 6th June
-* Realized that the shuffled download script was not used. Redownloading images from 1 to 20,000
+* Realized that the shuffled download script was not used. Redownloading images from 1 to 40,000
+
+## Saturday 9th June
+* Completed data loader code
+* Downloading from 40,000 to end

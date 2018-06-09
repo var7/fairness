@@ -10,3 +10,6 @@ python3 python3_download_facescrub.py -s 1 -e 10 -n 4 --crop_face facescrub_acto
 -e is end number
 -n is number of threads
 --crop_face is whether or not to store the crop of the face
+
+# to download from shuffled
+python3 python3_download_facescrub.py -s 40000 -n 4 --crop_face shuffled_facescrub_actors.txt /data/actors/
