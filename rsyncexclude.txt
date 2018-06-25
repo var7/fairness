@@ -1,0 +1,13 @@
+images/
+.git/
+.ipynb_checkpoints/
+.gitignore
+ipynb_checkpoints
+papers/
+data/
+fatr/
+german\ credit/
+cifardata/
+writing\ ipp/
+german credit/
+writing ipp/
