@@ -38,6 +38,7 @@ actors_frame['gender'] = 'male'
 print('Before deletion, actors frame')
 print(actors_frame.head())
 print('Shape:', actors_frame.shape)
+print('Number of entries: ', len(actors_frame))
 
 updated_actors_frame, actors_count = remove_missing_files(actors_frame, DATA_ACTORS_PATH)
 
@@ -45,7 +46,7 @@ print('After deletion, actors frame')
 print(updated_actors_frame.head())
 print('Shape:', updated_actors_frame.shape)
 print('{} lines were deleted'.format(actors_count))
-
+print('Number of remaining entries: ', len(updated_actors_frame))
 #%%
 actress_frame = pd.read_csv(ANNOT_ACTRESS_PATH, delimiter='\t')
 actress_frame['gender'] = 'female'
@@ -53,6 +54,7 @@ actress_frame['gender'] = 'female'
 print('Before deletion, actress frame')
 print(actress_frame.head())
 print('Shape: ', actress_frame.shape)
+print('Number of entries: ', len(actress_frame))
 
 updated_actress_frame, actress_count = remove_missing_files(actress_frame, DATA_ACTRESS_PATH)
 
@@ -60,6 +62,7 @@ print('After deletion, actress frame')
 print(updated_actress_frame.head())
 print('Shape:', updated_actress_frame.shape)
 print('{} lines were deleted'.format(actress_count))
+print('Number of remaining entries: ', len(updated_actress_frame))
 
 new_full_frame = updated_actors_frame.append(updated_actress_frame, ignore_index=True)
 print(new_full_frame.keys())
@@ -68,6 +71,7 @@ full_frame_with_ids = add_name_id(new_full_frame)
 print(full_frame_with_ids.head())
 print(full_frame_with_ids.tail())
 print('Shape:', full_frame_with_ids.shape)
+print('Total number of images downloaded: ', len(full_frame_with_ids))
 
 full_frame_with_ids.to_csv(SAVE_PATH+'full_facescrub_with_ids.txt', sep='\t', index=False)
 print('Successfully saved new dataframe to {}'.format(SAVE_PATH+'full_facescrub_with_ids.txt'))
