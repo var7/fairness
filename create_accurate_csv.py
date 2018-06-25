@@ -1,6 +1,8 @@
+#%%
 import pandas as pd
 import os
-
+print('Imported')
+#%%
 def remove_missing_files(df, data_path):
     count = 0
     indices = []
@@ -39,7 +41,7 @@ print(updated_actors_frame.head())
 print(updated_actors_frame.shape)
 print('{} lines were deleted'.format(actors_count))
 
-
+#%%
 actress_frame = pd.read_csv(ANNOT_ACTRESS_PATH, delimiter='\t')
 actress_frame['gender'] = 'female'
 

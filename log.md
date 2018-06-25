@@ -29,3 +29,13 @@
 ## Saturday 9th June
 * Completed data loader code
 * Downloading from 40,000 to end
+
+## Monday 11th June
+* Created dataloader function
+
+## Tuesday 12th June
+* `create_accurate_csv.py` - cleans up and creates a csv file that has all details about only the downloaded images
+
+## Friday 15th June
+* Advice from MLPR week 1
+>> A weak student project only tries a large complicated system. A basic requirement of a project is to compare to appropriate baselines, and to test what parts of a system are necessary for it to function. If an application only requires a simple method fit to a small amount of data, why do more? So starting with the smallest system that might work and building it up is often a good strategy.
