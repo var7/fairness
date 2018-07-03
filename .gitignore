@@ -10,3 +10,4 @@
 .vscode
 fastai/
 __pycache__/
+new_data/

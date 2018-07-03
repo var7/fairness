@@ -1,7 +1,8 @@
 #%%
 import pandas as pd
+import hashlib
 import os
-print('Imported')
+import numpy as np
 #%%
 def remove_missing_files(df, data_path):
     count = 0
@@ -10,9 +11,14 @@ def remove_missing_files(df, data_path):
         name = row['name'].replace(' ', '_')
         img_id = str(row['image_id'])
 
-        img_name = name + '_' + img_id + '.jpeg'
-        img_path = os.path.join(data_path, 'images', name, img_name)
+        # img_name = name + '_' + img_id + '.jpeg'
+        img_name = hashlib.sha1(row['url'].encode('utf-8')).hexdigest() + '.jpg'
+        # print(img_name)
+        # img_path = os.path.join(data_path, 'images', name, img_name)
+        img_path = os.path.join(data_path, name, img_name)
+        # print(img_path)
         if os.path.isfile(img_path):
+            # print(img_path)
             continue
         else:
             count += 1
@@ -24,13 +30,22 @@ def add_name_id(df):
     df['person_id'] = pd.Categorical(pd.factorize(df.name)[0] + 1)
     return df
 
+def data_split(low=1, class_size=265, holdout_frac=0.2, val_test_split=0.5, seed=1791387):
+    random_state = np.random.RandomState(seed)
+    all_pids = np.arange(low, low+class_size+1)
+    holdout_pids = random_state.randint(low, low+class_size+1, size=int(class_size*holdout_frac))
+    val_pids = random_state.choice(holdout_pids, size=int(class_size*holdout_frac*val_test_split), replace=False)
+    test_pids = np.setdiff1d(holdout_pids, val_pids)
+    train_pids = np.setdiff1d(all_pids, holdout_pids)
+    return train_pids, val_pids, test_pids
+
 ANNOT_ACTORS_PATH = "data/facescrub_actors.txt"
 ANNOT_ACTRESS_PATH = "data/facescrub_actresses.txt"
 
-DATA_ACTORS_PATH = "data/actor/"
-DATA_ACTRESS_PATH = "data/actress/"
+DATA_ACTORS_PATH = "new_data/actor/"
+DATA_ACTRESS_PATH = "new_data/actress/"
 
-SAVE_PATH = "data/"
+SAVE_PATH = "new_data/"
 
 actors_frame = pd.read_csv(ANNOT_ACTORS_PATH, delimiter='\t')
 actors_frame['gender'] = 'male'
@@ -47,6 +62,7 @@ print(updated_actors_frame.head())
 print('Shape:', updated_actors_frame.shape)
 print('{} lines were deleted'.format(actors_count))
 print('Number of remaining entries: ', len(updated_actors_frame))
+
 #%%
 actress_frame = pd.read_csv(ANNOT_ACTRESS_PATH, delimiter='\t')
 actress_frame['gender'] = 'female'
@@ -75,3 +91,27 @@ print('Total number of images downloaded: ', len(full_frame_with_ids))
 
 full_frame_with_ids.to_csv(SAVE_PATH+'full_facescrub_with_ids.txt', sep='\t', index=False)
 print('Successfully saved new dataframe to {}'.format(SAVE_PATH+'full_facescrub_with_ids.txt'))
+
+male_train, male_val, male_test = data_split()
+female_train, female_val, female_test = data_split(low=265)
+
+train_full = full_frame_with_ids[full_frame_with_ids.person_id.isin(np.concatenate((male_train, female_train)))]
+val_full = full_frame_with_ids[full_frame_with_ids.person_id.isin(np.concatenate((male_val, female_val)))]
+test_full = full_frame_with_ids[full_frame_with_ids.person_id.isin(np.concatenate((male_test, female_test)))]
+
+print('Training set')
+print(train_full.head())
+print(train_full.shape)
+train_full.to_csv(SAVE_PATH+'train_full_with_ids.txt', sep='\t', index=False)
+
+print('Validation set')
+print(val_full.head())
+print(val_full.shape)
+print('Valid set names', val_full.name.unique())
+val_full.to_csv(SAVE_PATH+'val_full_with_ids.txt', sep='\t', index=False)
+
+print('Test set')
+print(test_full.head())
+print(test_full.shape)
+print('Test set names', test_full.name.unique())
+test_full.to_csv(SAVE_PATH+'test_full_with_ids.txt', sep='\t', index=False)
