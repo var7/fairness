@@ -130,7 +130,7 @@ for epoch in range(n_epochs):
         if i%1000 == 0:
             print('{} epoch {} batch: {} loss'.format(epoch, i, running_loss))
     model_name = '{}_{}.pth'.format(epoch, running_loss)
-    
+    ~/facescrub-data/new_data_maxDATA_PATH+
     torch.save(tripletincpetion.state_dict(), MODEL_PATH+model_name)
 
 
