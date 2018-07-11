@@ -11,6 +11,26 @@ import matplotlib
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils, models
 
+
+from dataloader import FaceScrubDataset, TripletFaceScrub, SiameseFaceScrub
+from dataloader import FaceScrubBalancedBatchSampler
+
+
+from losses import ContrastiveLoss, TripletLoss, OnlineTripletLoss
+from networks import *
+
+import torch.optim as optim
+import torch.optim.lr_scheduler as lr_scheduler
+
+
+DATA_PATH = '/home/s1791387/facescrub-data/new_data_max/'
+TRAIN_PATH = os.path.join(DATA_PATH, 'train_full_with_ids.txt')
+VALID_PATH = os.path.join(DATA_PATH, 'val_full_with_ids.txt')
+TEST_PATH = os.path.join(DATA_PATH, 'test_full_with_ids.txt')
+
+JOB_NUMBER = sys.argv[1]
+WEIGHTS_PATH = '/home/s1791387/model_weigths/job_{}/'.format(JOB_NUMBER)
+
 use_cuda = True
 cuda = False
 # if gpu is to be used
@@ -21,21 +41,9 @@ if use_cuda and torch.cuda.is_available():
 else:
     device = torch.device("cpu")
 
-print(device)
-
-
-# ## Data loader and samplers
-
-from dataloader import FaceScrubDataset, TripletFaceScrub, SiameseFaceScrub
-from dataloader import FaceScrubBalancedBatchSampler
-
-DATA_PATH = '/home/s1791387/facescrub-data/new_data_max/'
-TRAIN_PATH = os.path.join(DATA_PATH, 'train_full_with_ids.txt')
-VALID_PATH = os.path.join(DATA_PATH, 'val_full_with_ids.txt')
-TEST_PATH = os.path.join(DATA_PATH, 'test_full_with_ids.txt')
-MODEL_PATH = os.path.join(DATA_PATH, 'model_weights/')
-print(TRAIN_PATH)
-print(os.path.isfile(TRAIN_PATH))
+print('Device set: {}'.format(device))
+print('Training set path: {}'.format(TRAIN_PATH))
+print('Training set Path exists: {}'.format(os.path.isfile(TRAIN_PATH)))
 
 data_transforms = {
     'train': transforms.Compose([
@@ -45,7 +53,7 @@ data_transforms = {
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ]),
     'val': transforms.Compose([
-        transforms.Resize(299),
+        transforms.Resize((299, 299)),
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 }
@@ -59,28 +67,10 @@ triplet_train_df = TripletFaceScrub(train_df, train=True)
 print('Train data converted to triplet data')
 
 
-def triplet_images_show(imgs, labels):
-    imgs_ = [img.numpy().transpose((1, 2, 0)) for img in imgs]
-    plt.figure(figsize=(10, 10))
-    plt.subplot(131)
-    plt.imshow(imgs_[0])
-    plt.title('Anchor: {}'.format(labels[0]['name']))
-    plt.subplot(132)
-    plt.imshow(imgs_[1])
-    plt.title('Positive: {}'.format(labels[1]['name']))
-    plt.subplot(133)
-    plt.imshow(imgs_[2])
-    plt.title('Negative: {}'.format(labels[2]['name']))
-
-
 triplet_dataloader = torch.utils.data.DataLoader(
     triplet_train_df, batch_size=4, shuffle=True, num_workers=1)
 
 
-from losses import ContrastiveLoss, TripletLoss, OnlineTripletLoss
-
-
-from networks import *
 
 inception = models.inception_v3(pretrained=True)
 inception.aux_logits = False
@@ -94,9 +84,6 @@ params = list(tripletinception.parameters())
 print('Number of params: {}'.format(len(params)))
 
 tripletinception.train()
-
-import torch.optim as optim
-import torch.optim.lr_scheduler as lr_scheduler
 
 margin = 1.
 criterion = nn.TripletMarginLoss(margin=margin, p=2)
@@ -119,10 +106,6 @@ if cuda:
 print('length of dataloader: {}'.format(len(triplet_dataloader)))
 
 for epoch in range(n_epochs):
-    since = time.time()
-
-    best_model_wts = copy.deepcopy(tripletinception.state_dict())
-
     print('Epoch {}/{}'.format(epoch, n_epochs - 1))
     print('-' * 10)
 
@@ -141,21 +124,20 @@ for epoch in range(n_epochs):
 
         running_loss += loss.item()
 
-        # best_model_wts = copy.deepcopy(tripletinception.state_dict())
-
         if i % 500 == 0:
             print('epoch number: {} batch number: {} loss: {}'.format(epoch, i, running_loss/500))
-    
+
     state = {
         'epoch': epoch,
         'state_dict': tripletinception.state_dict(),
         'optimizer': optimizer.state_dict()
     }
-    job_number = sys.argv[1]
-    model_path = '/home/s1791387/model_weigths/job_{}/'.format(job_number)
-    model_name = model_path+'weights_{}.pth'.format(epoch)
-    if not os.path.exists(model_path):
-        os.makedirs(model_path)
-    torch.save(state, model_name)
-    print('saved model to {}'.format(model_name))
+
+
+    MODEL_NAME = WEIGHTS_PATH + 'weights_{}.pth'.format(epoch)
+    if not os.path.exists(WEIGHTS_PATH):
+        os.makedirs(WEIGHTS_PATH)
+    torch.save(state, MODEL_NAME)
+    print('saved model to {}'.format(MODEL_NAME))
+
 print('finished training')

@@ -40,11 +40,11 @@ def remove_missing_files(df, data_path):
             count += 1
             indices.append(index)
 
-    with open('curropt_files.txt', 'a') as output:
+    with open('corrupt_files.txt', 'a') as output:
         for fname in curropt:
             output.write(fname)
             output.write('\n')
-    print('Curropt file names written to file')
+    print('corrupt file names written to file')
     return df.drop(actors_frame.index[indices]), count
 
 
