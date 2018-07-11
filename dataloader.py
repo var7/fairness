@@ -11,6 +11,7 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 from torch.utils.data.sampler import BatchSampler
 
+
 class FaceScrubDataset(Dataset):
     '''FaceScrub Dataset'''
 
@@ -50,22 +51,28 @@ class FaceScrubDataset(Dataset):
             # img_name = self.name.replace(' ', '_') + '_' + self.img_id + '_' + self.face_id + '.jpeg'
             img_name = hashlib.sha1(self.url).hexdigest() + '.jpg'
             # img_path = os.path.join(data_path, 'faces', self.name.replace(' ', '_'), img_name)
-            img_path = os.path.join(data_path, self.name.replace(' ', '_'), 'face', img_name)
-            img = io.imread(img_path)
+            img_path = os.path.join(
+                data_path, self.name.replace(' ', '_'), 'face', img_name)
+            #img = io.imread(img_path)
+            img = Image.open(img_path)
         else:
-            img_name = self.name.replace(' ', '_') + '_' + self.img_id + '.jpeg'
-            img_path = os.path.join(data_path, self.name.replace(' ', '_'), img_name)
-            img = io.imread(img_path)
+            img_name = self.name.replace(
+                ' ', '_') + '_' + self.img_id + '.jpeg'
+            img_path = os.path.join(
+                data_path, self.name.replace(' ', '_'), img_name)
+            #img = io.imread(img_path)
+            img = Image.open(img_path)
 
         labels = {'name': self.name, 'person_id': self.person_id,
-                    'gender': self.gender, 'face_id': self.face_id}
+                  'gender': self.gender, 'face_id': self.face_id}
 
-        img = Image.fromarray(img, mode='RGB')
-
+        #img = Image.fromarray(img, mode='RGB')
+        img = img.convert('RGB')
         if self.transform:
             img = self.transform(img)
 
         return img, labels
+
 
 class RandomAugment(object):
 
@@ -89,6 +96,7 @@ class RandomAugment(object):
                 'person_id': person_id, 'gender': gender,
                 'img_id': img_id, 'face_id': face_id}
 
+
 class SiameseFaceScrub(Dataset):
     '''
     Train: For each sample creates randomly a positive or a negative pairs
@@ -102,19 +110,20 @@ class SiameseFaceScrub(Dataset):
 
         self.pids = self.facescrub_dataset.pids
         self.pids_to_indices = {pid:
-            np.where(self.facescrub_dataset.faces_frame.person_id == pid)[0]
-            for pid in self.pids}
+                                np.where(
+                                    self.facescrub_dataset.faces_frame.person_id == pid)[0]
+                                for pid in self.pids}
 
         if not self.train:
             random_state = np.random.RandomState(1791387)
 
             positive_pairs = [[i,
-                random_state.choice(self.pids_to_indices[self.facescrub_dataset.faces_frame.person_id[i].item()]),1]
-                for i in range(0, len(self.facescrub_dataset), 2)]
+                               random_state.choice(self.pids_to_indices[self.facescrub_dataset.faces_frame.person_id[i].item()]), 1]
+                              for i in range(0, len(self.facescrub_dataset), 2)]
             negative_pairs = [[i,
-                random_state.choice(self.pids_to_indices[
-                    np.random.choice(list(set(self.pids) - set([self.facescrub_dataset.faces_frame.person_id[i].item()])))]), 0]
-                for i in range(0, len(self.facescrub_dataset), 2)]
+                               random_state.choice(self.pids_to_indices[
+                                   np.random.choice(list(set(self.pids) - set([self.facescrub_dataset.faces_frame.person_id[i].item()])))]), 0]
+                              for i in range(0, len(self.facescrub_dataset), 2)]
             self.test_pairs = positive_pairs + negative_pairs
 
     def __getitem__(self, index):
@@ -124,10 +133,13 @@ class SiameseFaceScrub(Dataset):
             if target == 1:
                 siamese_index = index
                 while siamese_index == index:
-                    siamese_index = np.random.choice(self.pids_to_indices[labels1['person_id']])
+                    siamese_index = np.random.choice(
+                        self.pids_to_indices[labels1['person_id']])
             else:
-                siamese_pid = np.random.choice(list(set(self.pids) - set([labels1['person_id']])))
-                siamese_index = np.random.choice(self.pids_to_indices[siamese_pid])
+                siamese_pid = np.random.choice(
+                    list(set(self.pids) - set([labels1['person_id']])))
+                siamese_index = np.random.choice(
+                    self.pids_to_indices[siamese_pid])
             img2, labels2 = self.facescrub_dataset[siamese_index]
 
         else:
@@ -143,6 +155,7 @@ class SiameseFaceScrub(Dataset):
     def __len__(self):
         return len(self.facescrub_dataset)
 
+
 class TripletFaceScrub(Dataset):
     """
     Train: For each sample (anchor) randomly chooses a positive and negative samples
@@ -156,17 +169,19 @@ class TripletFaceScrub(Dataset):
 
         self.pids = self.facescrub_dataset.pids
         self.pids_to_indices = {pid:
-            np.where(self.facescrub_dataset.faces_frame.person_id == pid)[0]
-            for pid in self.pids}
+                                np.where(
+                                    self.facescrub_dataset.faces_frame.person_id == pid)[0]
+                                for pid in self.pids}
 
         if not self.train:
             random_state = np.random.RandomState(1791387)
 
             triplets = [[i,
-                random_state.choice(self.pids_to_indices[self.facescrub_dataset.faces_frame.person_id[i].item()]),
-                random_state.choice(self.pids_to_indices[
-                    np.random.choice(list(set(self.pids) - set([self.facescrub_dataset.faces_frame.person_id[i].item()])))])]
-                for i in range(0, len(self.facescrub_dataset))]
+                         random_state.choice(
+                             self.pids_to_indices[self.facescrub_dataset.faces_frame.person_id[i].item()]),
+                         random_state.choice(self.pids_to_indices[
+                             np.random.choice(list(set(self.pids) - set([self.facescrub_dataset.faces_frame.person_id[i].item()])))])]
+                        for i in range(0, len(self.facescrub_dataset))]
 
             self.test_triplets = triplets
 
@@ -175,9 +190,12 @@ class TripletFaceScrub(Dataset):
             img1, labels1 = self.facescrub_dataset[index]
             positive_index = index
             while positive_index == index:
-                    positive_index = np.random.choice(self.pids_to_indices[labels1['person_id']])
-            negative_pid = np.random.choice(list(set(self.pids) - set([labels1['person_id']])))
-            negative_index = np.random.choice(self.pids_to_indices[negative_pid])
+                positive_index = np.random.choice(
+                    self.pids_to_indices[labels1['person_id']])
+            negative_pid = np.random.choice(
+                list(set(self.pids) - set([labels1['person_id']])))
+            negative_index = np.random.choice(
+                self.pids_to_indices[negative_pid])
             img2, labels2 = self.facescrub_dataset[positive_index]
             img3, labels3 = self.facescrub_dataset[negative_index]
         else:
@@ -209,11 +227,11 @@ class FaceScrubBalancedBatchSampler(BatchSampler):
         #     np.where(self.dataset.facescrub_dataset.faces_frame.person_id == pid)[0]
         #     for pid in self.pids}
         self.pids_to_indices = self.dataset.pids_to_indices
-        
+
         for pid in self.pids:
             np.random.shuffle(self.pids_to_indices[pid])
 
-        self.used_pid_indices_count = {pid: 0  for pid in self.pids}
+        self.used_pid_indices_count = {pid: 0 for pid in self.pids}
         self.count = 0
         self.n_classes = n_classes
         self.n_samples = n_samples
@@ -223,12 +241,13 @@ class FaceScrubBalancedBatchSampler(BatchSampler):
     def __iter__(self):
         self.count = 0
         while self.count + self.batch_size < len(self.dataset):
-            persons = np.random.choice(self.pids, self.n_classes, replace=False)
+            persons = np.random.choice(
+                self.pids, self.n_classes, replace=False)
             indices = []
 
             for person in persons:
                 indices.extend(self.pids_to_indices[person][
-                self.used_pid_indices_count[person]:self.used_pid_indices_count[person] + self.n_samples
+                    self.used_pid_indices_count[person]:self.used_pid_indices_count[person] + self.n_samples
                 ])
                 self.used_pid_indices_count[person] += self.n_samples
 
