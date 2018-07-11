@@ -1,7 +1,5 @@
 images/
-.git/
 .ipynb_checkpoints/
-.gitignore
 ipynb_checkpoints
 papers/
 data/
