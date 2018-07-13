@@ -4,6 +4,27 @@ import numpy as np
 import torch
 
 
+def save_checkpoint(state, save, path, filename):
+    """Save checkpoint if a new best is achieved"""
+    if save:
+        print ("=> Saving a new model")
+        if not os.path.exists(path):
+            os.makedirs(path)
+        torch.save(state, )
+        print('=> saved model to {}'.format(MODEL_NAME))
+    else:
+        print ("=> Validation Accuracy did not improve")
+
+def save_hyperparams(hyperparams, path, fname="hyperparams"):
+    """Save hyper parameter details to file"""
+    if not os.path.exists(path):
+        os.makedirs(path)
+    fname = fname + ".txt"
+    with open(os.path.join(path, fname), 'w') as fo:
+        for k, v in hyperparams.items():
+            fo.write('{} :\t {}\n'.format(k, v))
+    print('Saved hyper parameter details to {}'.format(os.path.join(path, fname)))
+
 def pdist(vectors):
     distance_matrix = -2 * vectors.mm(torch.t(vectors)) + vectors.pow(2).sum(dim=1).view(1, -1) + vectors.pow(2).sum(
         dim=1).view(-1, 1)
