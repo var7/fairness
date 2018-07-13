@@ -1,11 +1,10 @@
-# %%
+import sys
 import pandas as pd
 import imghdr
 import hashlib
 import os
 import numpy as np
 # %%
-
 
 def remove_missing_files(df, data_path):
     count = 0
@@ -21,7 +20,6 @@ def remove_missing_files(df, data_path):
         # print(img_name)
         # img_path = os.path.join(data_path, 'images', name, img_name)
         img_path = os.path.join(data_path, name, 'face', img_name)
-        # print(img_path)
         if os.path.isfile(img_path):
             if imghdr.what(img_path) is not None:
                 # print(img_path)
@@ -39,6 +37,7 @@ def remove_missing_files(df, data_path):
         else:
             count += 1
             indices.append(index)
+            
 
     with open('corrupt_files.txt', 'a') as output:
         for fname in curropt:
@@ -65,14 +64,14 @@ def data_split(low=1, class_size=265, holdout_frac=0.2, val_test_split=0.5, seed
     return train_pids, val_pids, test_pids
 
 
-ANNOT_ACTORS_PATH = "/afs/inf.ed.ac.uk/user/s17/s1791387/facescrub-data/data/facescrub_actors.txt"
-ANNOT_ACTRESS_PATH = "/afs/inf.ed.ac.uk/user/s17/s1791387/facescrub-data/data/facescrub_actresses.txt"
+ANNOT_ACTORS_PATH = "/home/var/facescrub/facescrub_actors.txt"
+ANNOT_ACTRESS_PATH = "/home/var/facescrub/facescrub_actresses.txt"
 
-DATA_PATH = "/afs/inf.ed.ac.uk/user/s17/s1791387/facescrub-data/new_data/"
-DATA_ACTORS_PATH = "/afs/inf.ed.ac.uk/user/s17/s1791387/facescrub-data/new_data/actor/"
-DATA_ACTRESS_PATH = "/afs/inf.ed.ac.uk/user/s17/s1791387/facescrub-data/new_data/actress/"
+DATA_PATH = "/home/var/final-fs-data/"
+DATA_ACTORS_PATH = "/home/var/final-fs-data/actor/"
+DATA_ACTRESS_PATH = "/home/var/final-fs-data/actress/"
 
-SAVE_PATH = "/afs/inf.ed.ac.uk/user/s17/s1791387/facescrub-data/new_data/"
+SAVE_PATH = "/home/var/final-fs-data/"
 
 actors_frame = pd.read_csv(ANNOT_ACTORS_PATH, delimiter='\t')
 actors_frame['gender'] = 'male'

@@ -32,15 +32,17 @@ parser.add_argument("-r", "--resume-training", dest="resume", action="store_true
 parser.set_defaults(resume=False)
 parser.add_argument("-nc", "--no-cuda", dest='use_cuda', action='store_false', help="Do not use cuda")
 parser.set_defaults(use_cuda=True)
+parser.add_argument("-d", "--data-path", dest="data_path", help="path to data files")
 
 args = parser.parse_args()
 
-DATA_PATH = '/home/s1791387/facescrub-data/new_data_max/'
+DATA_PATH = '/home/s1791387/facescrub-data/new_data_max/' if args.data_path is None else args.data_path
 TRAIN_PATH = os.path.join(DATA_PATH, 'train_full_with_ids.txt')
 VALID_PATH = os.path.join(DATA_PATH, 'val_full_with_ids.txt')
 TEST_PATH = os.path.join(DATA_PATH, 'test_full_with_ids.txt')
 
-JOB_NUMBER = args.job_number if args.job_number not None else
+CURR_DATE = "{}_{}_{}".format(time.strftime("%b"), time.strftime("%d"), time.strftime("%H"))
+JOB_NUMBER = "{}_{}".format(args.job_number, CURR_DATE) if args.job_number is not None else CURR_DATE
 WEIGHTS_PATH = '/home/s1791387/model_weigths/job_{}/'.format(JOB_NUMBER)
 
 # hyper parameters
