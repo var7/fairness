@@ -2,19 +2,21 @@ import os
 import sys
 import time
 import copy
-import torch
+import argparse
+import datetime
+
+
 import pandas as pd
-from skimage import io, transform
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
+
+import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils, models
 
-
 from dataloader import FaceScrubDataset, TripletFaceScrub, SiameseFaceScrub
 from dataloader import FaceScrubBalancedBatchSampler
-
 
 from losses import ContrastiveLoss, TripletLoss, OnlineTripletLoss
 from networks import *
@@ -22,16 +24,36 @@ from networks import *
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 
+parser = argparse.ArgumentParser()
+
+parser.add_argument("-j", "--job-number", dest="job_number", help="job number to store weights", type=int)
+parser.add_argument("-e", "--epochs", dest="epochs", default=20, type=int, help="Number of epochs")
+parser.add_argument("-r", "--resume-training", dest="resume", action="store_true", help="Resume training")
+parser.set_defaults(resume=False)
+parser.add_argument("-nc", "--no-cuda", dest='use_cuda', action='store_false', help="Do not use cuda")
+parser.set_defaults(use_cuda=True)
+
+args = parser.parse_args()
 
 DATA_PATH = '/home/s1791387/facescrub-data/new_data_max/'
 TRAIN_PATH = os.path.join(DATA_PATH, 'train_full_with_ids.txt')
 VALID_PATH = os.path.join(DATA_PATH, 'val_full_with_ids.txt')
 TEST_PATH = os.path.join(DATA_PATH, 'test_full_with_ids.txt')
 
-JOB_NUMBER = sys.argv[1]
+JOB_NUMBER = args.job_number if args.job_number not None else
 WEIGHTS_PATH = '/home/s1791387/model_weigths/job_{}/'.format(JOB_NUMBER)
 
-use_cuda = True
+# hyper parameters
+batch_size = 4
+input_size = 299
+output_dim = 128
+learning_rate = 1e-3
+num_epochs = args.epochs
+print_every = 100
+best_accuracy = torch.FloatTensor([0])
+start_epoch = 0
+
+use_cuda = args.use_cuda
 cuda = False
 # if gpu is to be used
 if use_cuda and torch.cuda.is_available():
@@ -71,17 +93,15 @@ triplet_dataloader = torch.utils.data.DataLoader(
     triplet_train_df, batch_size=4, shuffle=True, num_workers=1)
 
 
-
 inception = models.inception_v3(pretrained=True)
 inception.aux_logits = False
 num_ftrs = inception.fc.in_features
 inception.fc = torch.nn.Linear(num_ftrs, 128)
 
-
 tripletinception = TripletNet(inception)
 
 params = list(tripletinception.parameters())
-print('Number of params: {}'.format(len(params)))
+print('Number of params in triplet inception: {}'.format(len(params)))
 
 tripletinception.train()
 
@@ -103,6 +123,7 @@ if cuda:
     tripletinception.cuda()
     print('sent model to gpu {}'.format(
         next(tripletinception.parameters()).is_cuda))
+
 print('length of dataloader: {}'.format(len(triplet_dataloader)))
 
 for epoch in range(n_epochs):
@@ -130,7 +151,8 @@ for epoch in range(n_epochs):
     state = {
         'epoch': epoch,
         'state_dict': tripletinception.state_dict(),
-        'optimizer': optimizer.state_dict()
+        'optimizer': optimizer.state_dict(),
+        'scheduler': scheduler.state_dict()
     }
 
 
