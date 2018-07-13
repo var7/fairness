@@ -55,7 +55,7 @@ TRAIN_PATH = os.path.join(DATA_PATH, 'train_full_with_ids.txt')
 VALID_PATH = os.path.join(DATA_PATH, 'val_full_with_ids.txt')
 TEST_PATH = os.path.join(DATA_PATH, 'test_full_with_ids.txt')
 
-CURR_DATE = "{}_{}_{}".format(time.strftime("%b"), time.strftime("%d"), time.strftime("%H"))
+CURR_DATE = "{}_{}_{}00hrs".format(time.strftime("%b"), time.strftime("%d"), time.strftime("%H"))
 JOB_NUMBER = "{}_{}".format(args.job_number, CURR_DATE) if args.job_number is not None else CURR_DATE
 WEIGHTS_PATH = os.path.join(DATA_PATH, 'model_weigths', 'job_{}'.format(JOB_NUMBER))
 ############## hyper parameters #############
@@ -64,7 +64,7 @@ input_size = 299
 output_dim = 128
 learning_rate = args.learning_rate
 num_epochs = args.epochs
-print_every = 500
+print_every = 50
 start_epoch = 0
 
 triplet_margin = 1.
@@ -108,13 +108,13 @@ print('Train data converted to triplet data')
 
 
 triplet_dataloader = torch.utils.data.DataLoader(
-    triplet_train_df, batch_size=4, shuffle=True, num_workers=1)
+    triplet_train_df, batch_size=batch_size, shuffle=True, num_workers=1)
 
 ############## set up models #############
 inception = models.inception_v3(pretrained=True)
 inception.aux_logits = False
 num_ftrs = inception.fc.in_features
-inception.fc = nn.Linear(num_ftrs, 128)
+inception.fc = nn.Linear(num_ftrs, output_dim)
 
 tripletinception = TripletNet(inception)
 
@@ -155,7 +155,7 @@ if resume_training:
     start_epoch = checkpoint['epoch']
     tripletinception.load_state_dict(checkpoint['state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer'])
-    scheduler.load_state_dict(checkpoint['scheduler'])
+    # scheduler.load_state_dict(checkpoint['scheduler'])
     print("=> loaded checkpoint '{}' (trained for {} epochs)".format(resume_weights, checkpoint['epoch']))
 
 ############## Training #############
@@ -165,7 +165,9 @@ for epoch in range(start_epoch, start_epoch + num_epochs):
     print('-' * 10)
 
     running_loss = 0.0
+    start_time = time.time()
     for i, (imgs, labels) in enumerate(triplet_dataloader):
+        batch_start = time.time()
         optimizer.zero_grad()
         imgs = [img.to(device) for img in imgs]
         embed_anchor, embed_pos, embed_neg = tripletinception(
@@ -179,7 +181,11 @@ for epoch in range(start_epoch, start_epoch + num_epochs):
         running_loss += loss.item()
 
         if i % print_every == 0:
-            print('batch number: {} loss: {}'.format(epoch, i, running_loss/i))
+            batch_end = (time.time() - batch_start)/60
+            print('batch number: {} loss: {} time: {} min'.format(i, running_loss/(i+1), batch_end))
+           
+    elapsed = (time.time() - start_time)/60
+    print('Elapsed time for epoch {}: {} minutes'.format(epoch, elapsed))
 
     state = {
         'epoch': epoch,
@@ -188,12 +194,12 @@ for epoch in range(start_epoch, start_epoch + num_epochs):
         'scheduler': scheduler.state_dict()
     }
 
-    MODEL_NAME = WEIGHTS_PATH + 'weights_{}.pth'.format(epoch)
+    MODEL_NAME = os.path.join(WEIGHTS_PATH, 'weights_{}.pth'.format(epoch))
 
-    if epoch % 2 == 0:
-        save_checkpoint(state, True, WEIGHTS_PATH, MODEL_NAME)
+    #if epoch % 2 == 0:
+    save_checkpoint(state, True, WEIGHTS_PATH, MODEL_NAME)
 
-
+########### POST TRAINING SAVE ##########
 hyperparams = {
     'JOB_NUMBER': JOB_NUMBER,
     'batch_size': batch_size,

@@ -1,5 +1,6 @@
 from itertools import combinations
 
+import os
 import numpy as np
 import torch
 
@@ -10,8 +11,8 @@ def save_checkpoint(state, save, path, filename):
         print ("=> Saving a new model")
         if not os.path.exists(path):
             os.makedirs(path)
-        torch.save(state, )
-        print('=> saved model to {}'.format(MODEL_NAME))
+        torch.save(state, filename)
+        print('=> saved model to {}'.format(filename))
     else:
         print ("=> Validation Accuracy did not improve")
 
