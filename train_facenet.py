@@ -36,8 +36,8 @@ parser.add_argument("-rw", "--weigths", dest="resume_weights", help="Path to wei
 parser.add_argument("-nc", "--no-cuda", dest='use_cuda', action='store_false', help="Do not use cuda")
 # parser.set_defaults(use_cuda=True)
 parser.add_argument("-d", "--data-path", dest="data_path", help="path to data files")
-parser.add_argument("-bs", "--batch-size", default=128, dest="batch_size", help="batch size")
-parser.add_argument("-lr", "--learning-rate", default=1e-2, dest="learning_rate", help="learning rate")
+parser.add_argument("-bs", "--batch-size", default=128, dest="batch_size", type=int, help="batch size")
+parser.add_argument("-lr", "--learning-rate", default=1e-2, dest="learning_rate", type=float, help="learning rate")
 
 args = parser.parse_args()
 print(args)
@@ -125,7 +125,7 @@ print('Number of params in triplet inception: {}'.format(len(params)))
 ############## set up for training #############
 criterion = nn.TripletMarginLoss(margin=triplet_margin, p=triplet_p)
 
-optimizer = optim.Adam(tripletinception.parameters(), lr=lr)
+optimizer = optim.Adam(tripletinception.parameters(), lr=learning_rate)
 scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 
 num_epochs = num_epochs
