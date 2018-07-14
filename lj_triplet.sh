@@ -3,8 +3,8 @@
 #SBATCH -n 1	  # tasks requested
 #SBATCH --gres=gpu:1
 #SBATCH --mem=16000  # memory in Mb
-#SBATCH -o ./logs/%j_triplet.log  # send stdout to sample_experiment_outfile
-#SBATCH -e ./logs/%j_triplet.err  # send stderr to sample_experiment_errfile
+#SBATCH -o ./logs/lj_%j_triplet.log  # send stdout to sample_experiment_outfile
+#SBATCH -e ./logs/lj_%j_triplet.err  # send stderr to sample_experiment_errfile
 #SBATCH -t 24:00:00  # time requested in hour:minute:secon
 #SBATCH -p LongJobs
 export CUDA_HOME=/opt/cuda-8.0.44
@@ -33,4 +33,4 @@ source /home/${STUDENT_ID}/miniconda3/bin/activate diss
 
 export XDG_RUNTIME_DIR=${TMPDIR}
 
-python train_facenet.py -e 20 -bs 8 -r -rw /home/s1791387/facescrub-data/new_data_max/model_weigths/job_Jul_13_2000hrs/weights_6.pth
+python train_facenet.py -e 20 -bs 8 -r -rw /home/s1791387/facescrub-data/new_data_max/model_weigths/job_Jul_13_2300hrs/weights_10.pth -j long1 

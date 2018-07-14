@@ -28,7 +28,7 @@ from utils import save_checkpoint, save_hyperparams
 ############## add parser arguments #############
 parser = argparse.ArgumentParser()
 
-parser.add_argument("-j", "--job-number", dest="job_number", help="job number to store weights", type=int)
+parser.add_argument("-j", "--job-number", dest="job_number", help="job number to store weights")
 parser.add_argument("-e", "--epochs", dest="epochs", default=20, type=int, help="Number of epochs")
 parser.add_argument("-r", "--resume-training", dest="resume", action="store_true", help="Resume training")
 parser.add_argument("-rw", "--weigths", dest="resume_weights", help="Path to weights file")
@@ -155,9 +155,26 @@ if resume_training:
     start_epoch = checkpoint['epoch']
     tripletinception.load_state_dict(checkpoint['state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer'])
-    # scheduler.load_state_dict(checkpoint['scheduler'])
+    scheduler.load_state_dict(checkpoint['scheduler'])
     print("=> loaded checkpoint '{}' (trained for {} epochs)".format(resume_weights, checkpoint['epoch']))
 
+############## Save Hyper params to file ############
+hyperparams = {
+    'JOB_NUMBER': JOB_NUMBER,
+    'batch_size': batch_size,
+    'input_size': input_size,
+    'output_dim': output_dim,
+    'learning_rate': learning_rate,
+    'num_epochs': num_epochs,
+    'print_every': print_every,
+    'start_epoch': start_epoch,
+    'optimizer': optimizer,
+    'scheduler': scheduler,
+    'triplet_margin': triplet_margin,
+    'triplet_p': triplet_p,
+    'criterion': criterion
+}
+save_hyperparams(hyperparams=hyperparams, path=WEIGHTS_PATH)
 ############## Training #############
 for epoch in range(start_epoch, start_epoch + num_epochs):
     tripletinception.train()
@@ -198,24 +215,5 @@ for epoch in range(start_epoch, start_epoch + num_epochs):
 
     #if epoch % 2 == 0:
     save_checkpoint(state, True, WEIGHTS_PATH, MODEL_NAME)
-
-########### POST TRAINING SAVE ##########
-hyperparams = {
-    'JOB_NUMBER': JOB_NUMBER,
-    'batch_size': batch_size,
-    'input_size': input_size,
-    'output_dim': output_dim,
-    'learning_rate': learning_rate,
-    'num_epochs': num_epochs,
-    'print_every': print_every,
-    'start_epoch': start_epoch,
-    'optimizer': optimizer,
-    'scheduler': scheduler,
-    'triplet_margin': triplet_margin,
-    'triplet_p': triplet_p,
-    'criterion': criterion
-}
-save_hyperparams(hyperparams=hyperparams, path=WEIGHTS_PATH)
-
 
 print('Finished training')
