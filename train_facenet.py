@@ -159,6 +159,10 @@ best_loss = 1e2
 ############## Load saved weights #############
 if resume_training:
     resume_weights=args.resume_weights
+    if args.multi_gpu:
+        if torch.cuda.device_count() > 1:
+            print('Loading onto GPU')
+            tripletinception = nn.DataParallel(tripletinception).cuda()
     if cuda:
         checkpoint=torch.load(resume_weights)
     else:
@@ -170,11 +174,12 @@ if resume_training:
     start_epoch=checkpoint['epoch']
     tripletinception.load_state_dict(checkpoint['state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer'])
+    best_loss = checkpoint['best_loss']
     # scheduler.load_state_dict(checkpoint['scheduler'])
     print("=> loaded checkpoint '{}' (trained for {} epochs)".format(
         resume_weights, checkpoint['epoch']))
-    # for epoch in range(0, start_epoch):
-    #     scheduler.step()
+    for epoch in range(0, start_epoch):
+        scheduler.step()
 ############## Send model to GPU ############
 if cuda:
     tripletinception.cuda()
@@ -217,7 +222,11 @@ for epoch in range(start_epoch, start_epoch + num_epochs):
     for batch_idx, (imgs, labels) in enumerate(train_tripletloader):
         batch_start=time.time()
         optimizer.zero_grad()
-        imgs=[img.to(device) for img in imgs]
+        
+        for batch_idx, (imgs, labels) in enumerate(val_tripletloader):
+            with torch.cuda.device(0):
+                imgs=[img.cuda(async=True) for img in imgs]
+
         embed_anchor, embed_pos, embed_neg=tripletinception(
             imgs[0], imgs[1], imgs[2])
 
@@ -240,7 +249,9 @@ for epoch in range(start_epoch, start_epoch + num_epochs):
         tripletinception.eval()
         val_loss = 0
         for batch_idx, (imgs, labels) in enumerate(val_tripletloader):
-            imgs=[img.to(device) for img in imgs]
+            with torch.cuda.device(0):
+                imgs=[img.cuda(async=True) for img in imgs]
+
             embed_anchor, embed_pos, embed_neg=tripletinception(
                 imgs[0], imgs[1], imgs[2])
 
