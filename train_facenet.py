@@ -155,14 +155,6 @@ criterion=nn.TripletMarginLoss(margin=triplet_margin, p=triplet_p)
 optimizer=optim.Adam(tripletinception.parameters(), lr=learning_rate)
 scheduler=lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 best_loss = 1e2
-if cuda:
-    tripletinception.cuda()
-    print('Sent model to gpu {}'.format(
-        next(tripletinception.parameters()).is_cuda))
-    if args.multi_gpu:
-        if torch.cuda.device_count() > 1:
-          print("Using {} GPUS".format(torch.cuda.device_count()))
-          tripletinception = nn.DataParallel(tripletinception).cuda()
 
 ############## Load saved weights #############
 if resume_training:
@@ -183,7 +175,15 @@ if resume_training:
         resume_weights, checkpoint['epoch']))
     # for epoch in range(0, start_epoch):
     #     scheduler.step()
-
+############## Send model to GPU ############
+if cuda:
+    tripletinception.cuda()
+    print('Sent model to gpu {}'.format(
+        next(tripletinception.parameters()).is_cuda))
+    if args.multi_gpu:
+        if torch.cuda.device_count() > 1:
+          print("Using {} GPUS".format(torch.cuda.device_count()))
+          tripletinception = nn.DataParallel(tripletinception).cuda()
 ############## Save Hyper params to file ############
 hyperparams={
     'JOB_NUMBER': JOB_NUMBER,
