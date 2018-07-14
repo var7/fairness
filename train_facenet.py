@@ -42,7 +42,7 @@ parser.add_argument("-nc", "--no-cuda", dest='use_cuda',
 # parser.set_defaults(use_cuda=True)
 parser.add_argument("-d", "--data-path", dest="data_path",
                     help="path to data files")
-parser.add_argument("-bs", "--batch-size", default=128,
+parser.add_argument("-bs", "--batch-size", default=8,
                     dest="batch_size", type=int, help="batch size")
 parser.add_argument("-lr", "--learning-rate", default=1e-2,
                     dest="learning_rate", type=float, help="learning rate")
@@ -75,7 +75,7 @@ input_size = 299
 output_dim = 128
 learning_rate = args.learning_rate
 num_epochs = args.epochs
-print_every = 50
+print_every = 100
 start_epoch = 0
 
 triplet_margin = 1.  # margin

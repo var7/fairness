@@ -33,4 +33,4 @@ source /home/${STUDENT_ID}/miniconda3/bin/activate diss
 
 export XDG_RUNTIME_DIR=${TMPDIR}
 
-python train_facenet.py -e 3 -bs 8 -r -rw /home/s1791387/facescrub-data/new_data_max/model_weigths/job_Jul_13_2300hrs/weights_10.pth -j short1
+python -m cProfile -o short2.prof train_facenet.py -e 3 -bs 8 -r -rw /home/s1791387/facescrub-data/new_data_max/model_weigths/job_short1_Jul_14_0800hrs/weights_12.pth -j short2
