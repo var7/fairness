@@ -14,6 +14,7 @@ import matplotlib
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
+import torch.backends.cudnn as cudnn
 from torchvision import transforms, utils, models
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
@@ -46,6 +47,7 @@ parser.add_argument("-bs", "--batch-size", default=8,
                     dest="batch_size", type=int, help="batch size")
 parser.add_argument("-lr", "--learning-rate", default=1e-2,
                     dest="learning_rate", type=float, help="learning rate")
+parser.add_argument('--multi-gpu', dest='multi_gpu', action='store_true', help='use multiple gpus')
 
 args = parser.parse_args()
 print(args)
@@ -88,6 +90,7 @@ if args.use_cuda and torch.cuda.is_available():
     device = torch.device("cuda")
     torch.set_default_tensor_type('torch.cuda.FloatTensor')
     cuda = True
+    cudnn.benchmark = True
 else:
     device = torch.device("cpu")
 
@@ -156,6 +159,10 @@ if cuda:
     tripletinception.cuda()
     print('Sent model to gpu {}'.format(
         next(tripletinception.parameters()).is_cuda))
+    if args.multi_gpu:
+        if torch.cuda.device_count() > 1:
+          print("Using {} GPUS".format(torch.cuda.device_count()))
+          tripletinception = nn.DataParallel(tripletinception).cuda()
 
 ############## Load saved weights #############
 if resume_training:
