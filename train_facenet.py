@@ -222,10 +222,13 @@ for epoch in range(start_epoch, start_epoch + num_epochs):
     for batch_idx, (imgs, labels) in enumerate(train_tripletloader):
         batch_start=time.time()
         optimizer.zero_grad()
-        
+
         for batch_idx, (imgs, labels) in enumerate(val_tripletloader):
-            with torch.cuda.device(0):
-                imgs=[img.cuda(async=True) for img in imgs]
+            if args.multi_gpu:
+                with torch.cuda.device(0):
+                    imgs=[img.cuda(async=True) for img in imgs]
+            else:
+                imgs = [img.to(device) for img in imgs]
 
         embed_anchor, embed_pos, embed_neg=tripletinception(
             imgs[0], imgs[1], imgs[2])
@@ -249,8 +252,11 @@ for epoch in range(start_epoch, start_epoch + num_epochs):
         tripletinception.eval()
         val_loss = 0
         for batch_idx, (imgs, labels) in enumerate(val_tripletloader):
-            with torch.cuda.device(0):
-                imgs=[img.cuda(async=True) for img in imgs]
+            if args.multi_gpu:
+                with torch.cuda.device(0):
+                    imgs=[img.cuda(async=True) for img in imgs]
+            else:
+                imgs = [img.to(device) for img in imgs]
 
             embed_anchor, embed_pos, embed_neg=tripletinception(
                 imgs[0], imgs[1], imgs[2])
