@@ -208,47 +208,24 @@ hyperparams={
 }
 save_hyperparams(hyperparams=hyperparams, path=WEIGHTS_PATH)
 ############## Training #############
-
+train_losses = []
+val_losses = []
+epoch_time = AverageMeter()
+ep_end = time.time()
 for epoch in range(start_epoch, start_epoch + num_epochs):
 
     scheduler.step()
 
-    print('Epoch {}/{}'.format(epoch, start_epoch + num_epochs - 1))
-    print('-' * 10)
+
 
     # train
-    train(train_tripletloader, tripletinception, criterion, optimizer, epoch)
-
-    print('-'*20)
-    print('Validation test')
-    val_loss = 0
-    val_losses = []
-    with torch.no_grad():
-        tripletinception.eval()
-        val_loss = 0
-        for batch_idx, (imgs, labels) in enumerate(val_tripletloader):
-            if args.multi_gpu:
-                with torch.cuda.device(0):
-                    imgs=[img.cuda(async=True) for img in imgs]
-            else:
-                imgs = [img.to(device) for img in imgs]
-
-            embed_anchor, embed_pos, embed_neg=tripletinception(
-                imgs[0], imgs[1], imgs[2])
-
-            loss = criterion(embed_anchor, embed_pos, embed_neg)
-
-            val_loss += loss.item()
-            val_losses.append(loss.item())
-            print('batch number: {} val loss: {}'.format(
-                batch_idx, val_loss/(batch_idx+1)))
-            if batch_idx == 5:
-                break
-
-        val_loss = val_loss / (batch_idx + 1)
-
+    train_loss = train(train_tripletloader, tripletinception, criterion, optimizer, epoch)
+    train_losses.append[train_loss]
+    # validate
+    print('-'*10)
+    val_loss = validate(val_tripletloader, tripletinception, criterion)
     print('Validation loss: {}'.format(val_loss))
-
+    val_losses.append[val_loss]
     state={
         'epoch': epoch,
         'state_dict': tripletinception.state_dict(),
@@ -262,7 +239,11 @@ for epoch in range(start_epoch, start_epoch + num_epochs):
         best_loss = val_loss
         MODEL_NAME=os.path.join(WEIGHTS_PATH, 'weights_{}.pth'.format(epoch))
         save_checkpoint(state, True, WEIGHTS_PATH, MODEL_NAME)
-
+    print('-' * 20)
+    epoch_time.update(time.time() - ep_end)
+    ep_end = time.time()
+    print('Epoch {}/{}\t'
+          'Time {epoch_time.val:.3f} ({epoch_time.avg:.3f})'.format(epoch, start_epoch + num_epochs - 1))
 
 print('Finished training')
 
@@ -288,7 +269,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
         loss = criterion(embed_anchor, embed_pos, embed_neg)
 
         losses.update(loss.item(), imgs[0].size(0))
-        running_loss += loss.item()
+
 
         optimizer.zero_grad()
         loss.backward()
@@ -306,6 +287,8 @@ def train(train_loader, model, criterion, optimizer, epoch):
                   'Loss {loss.val:.4f} ({loss.avg:.4f})'.format(
                    epoch, batch_idx, len(train_tripletloader), batch_time=batch_time,
                    data_time=data_time, loss=losses))
+
+        return losses.avg
 
 def validate(val_loader, model, criterion):
     batch_time = AverageMeter()
@@ -327,30 +310,16 @@ def validate(val_loader, model, criterion):
 
             loss = criterion(embed_anchor, embed_pos, embed_neg)
 
-            val_loss += loss.item()
             losses.update(loss.item(), imgs[0].size(0))
-
-            # compute output
-            output = model(input)
-            loss = criterion(output, target)
-
-            # measure accuracy and record loss
-            prec1, prec5 = accuracy(output, target, topk=(1, 5))
-            losses.update(loss.item(), input.size(0))
-            top1.update(prec1[0], input.size(0))
-            top5.update(prec5[0], input.size(0))
 
             # measure elapsed time
             batch_time.update(time.time() - end)
             end = time.time()
 
-            if i % args.print_freq == 0:
+            if i % print_every == 0:
                 print('Test: [{0}/{1}]\t'
                       'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                       'Loss {loss.val:.4f} ({loss.avg:.4f})'.format(
                        i, len(val_loader), batch_time=batch_time, loss=losses)
 
-        print(' * Prec@1 {top1.avg:.3f} Prec@5 {top5.avg:.3f}'
-              .format(top1=top1, top5=top5))
-
-    return top1.avg
+    return losses.avg
