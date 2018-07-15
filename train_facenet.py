@@ -24,7 +24,7 @@ from dataloader import FaceScrubBalancedBatchSampler
 
 from networks import *
 
-from utils import save_checkpoint, save_hyperparams
+from utils import save_checkpoint, save_hyperparams, AverageMeter
 
 ############## add parser arguments #############
 parser = argparse.ArgumentParser()
@@ -129,12 +129,12 @@ print('Validation data converted to triplet form. Length: {}'.format(
     len(triplet_val_df)))
 
 train_tripletloader=torch.utils.data.DataLoader(
-    triplet_train_df, batch_size=batch_size, shuffle=True, num_workers=4)
+    triplet_train_df, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=8)
 print('Train loader created. Length of train loader: {}'.format(
     len(train_tripletloader)))
 
 val_tripletloader=torch.utils.data.DataLoader(
-    triplet_val_df, batch_size=batch_size, shuffle=True, num_workers=4)
+    triplet_val_df, batch_size=batch_size, shuffle=False, pin_memory=True, num_workers=8)
 print('Val triplet loader created. Length of val load: {}'.format(
     len(val_tripletloader)))
 
@@ -146,8 +146,9 @@ inception.fc=nn.Linear(num_ftrs, output_dim)
 
 tripletinception=TripletNet(inception)
 
-params=list(tripletinception.parameters())
-print('Number of params in triplet inception: {}'.format(len(params)))
+params=sum(p.numel() for p in tripletinception.parameters() if p.requires_grad)
+print('Number of params in triplet inception: {}'.format(params))
+
 ############## set up for training #############
 print('Triplet margin: {}. Norm degree: {}.'.format(triplet_margin, triplet_p))
 criterion=nn.TripletMarginLoss(margin=triplet_margin, p=triplet_p)
@@ -209,6 +210,7 @@ save_hyperparams(hyperparams=hyperparams, path=WEIGHTS_PATH)
 ############## Training #############
 
 for epoch in range(start_epoch, start_epoch + num_epochs):
+    
     scheduler.step()
 
     tripletinception.train()
@@ -216,36 +218,48 @@ for epoch in range(start_epoch, start_epoch + num_epochs):
     print('-' * 10)
 
     running_loss=0.0
-    losses=[]
+    
+    batch_time = AverageMeter()
+    data_time = AverageMeter()
+    losses = AverageMeter()
 
-    start_time=time.time()
+    end = time.time()
+    
     for batch_idx, (imgs, labels) in enumerate(train_tripletloader):
-        batch_start=time.time()
+        data_time.update(time.time() - end)
+        
         optimizer.zero_grad()
-
-        for batch_idx, (imgs, labels) in enumerate(val_tripletloader):
-            if args.multi_gpu:
-                with torch.cuda.device(0):
-                    imgs=[img.cuda(async=True) for img in imgs]
-            else:
-                imgs = [img.to(device) for img in imgs]
+        
+        if args.multi_gpu:
+            with torch.cuda.device(0):
+                imgs=[img.cuda(async=True) for img in imgs]
+        else:
+            imgs = [img.to(device) for img in imgs]
 
         embed_anchor, embed_pos, embed_neg=tripletinception(
             imgs[0], imgs[1], imgs[2])
 
         loss = criterion(embed_anchor, embed_pos, embed_neg)
-
+        losses.update(loss.item(), imgs[0].size(0))
         running_loss += loss.item()
-        losses.append(loss.item())
+        # losses.append(loss.item())
 
         loss.backward()
         optimizer.step()
 
+        batch_time.update(time.time() - end)
+        end = time.time()
+        
         if batch_idx % print_every == 0:
-            batch_end=(time.time() - batch_start)
-            print('batch number: {} loss: {} time: {} sec'.format(
-                batch_idx, running_loss/(batch_idx+1), batch_end))
-
+            running_loss /= batch_idx + 1
+            print('Epoch: [{0}][{1}/{2}]\t'
+                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                  'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
+                  'Loss {loss.val:.4f} ({loss.avg:.4f})'.format(
+                   epoch, batch_idx, len(train_tripletloader), batch_time=batch_time,
+                   data_time=data_time, loss=losses))
+    print('-'*20)
+    print('Validation test')
     val_loss = 0
     val_losses = []
     with torch.no_grad():
@@ -265,6 +279,10 @@ for epoch in range(start_epoch, start_epoch + num_epochs):
 
             val_loss += loss.item()
             val_losses.append(loss.item())
+            print('batch number: {} val loss: {}'.format(
+                batch_idx, val_loss/(batch_idx+1)))
+            if batch_idx == 5:
+                break
 
         val_loss = val_loss / (batch_idx + 1)
 
@@ -284,7 +302,5 @@ for epoch in range(start_epoch, start_epoch + num_epochs):
         MODEL_NAME=os.path.join(WEIGHTS_PATH, 'weights_{}.pth'.format(epoch))
         save_checkpoint(state, True, WEIGHTS_PATH, MODEL_NAME)
 
-    elapsed=(time.time() - start_time)/60
-    print('Elapsed time for epoch {}: {} minutes'.format(epoch, elapsed))
 
 print('Finished training')
