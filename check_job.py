@@ -11,7 +11,7 @@ bashCommand = "squeue -u s1791387 -p Short"
 while(1):
     process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
     output, error = process.communicate()
-    state = output.split()
+    state = output.decode().split()
     print(state)
     if output is None:
         put_job()
