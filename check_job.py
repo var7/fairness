@@ -13,10 +13,13 @@ while(1):
     output, error = process.communicate()
     state = output.decode().split()
     print(state)
+    job_id = state[8]
+    print(job_id)
     if output is None:
-        put_job()
+        put_job(state)
     print(output.decode())
     time.sleep(args.sleep_time)
 
-def put_job():
-    return 0
+def put_job(state):
+    job_id = state[8]
+    print(job_id)
