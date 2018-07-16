@@ -33,4 +33,4 @@ source /home/${STUDENT_ID}/miniconda3/bin/activate fairness
 
 export XDG_RUNTIME_DIR=${TMPDIR}
 
-python -m cProfile -o short2.prof train_facenet.py -e 3 -bs 8 -r -rw /home/s1791387/facescrub-data/new_data_max/model_weigths/job_short1_Jul_14_0800hrs/weights_12.pth -j short2
+python train_facenet.py -e 3 -bs 10 -r -rw /home/s1791387/facescrub-data/new_data_max/model_weigths/job_short4_Jul_15_1900hrs/weights_14.pth -j short5

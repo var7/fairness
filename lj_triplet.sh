@@ -29,8 +29,8 @@ export TMPDIR=/disk/scratch/${STUDENT_ID}/
 export TMP=/disk/scratch/${STUDENT_ID}/
 # Activate the relevant virtual environment:
 
-source /home/${STUDENT_ID}/miniconda3/bin/activate diss
+source /home/${STUDENT_ID}/miniconda3/bin/activate fairness
 
 export XDG_RUNTIME_DIR=${TMPDIR}
 
-python train_facenet.py -e 20 -bs 8 -r -rw /home/s1791387/facescrub-data/new_data_max/model_weigths/job_Jul_13_2300hrs/weights_10.pth -j long1 
+python train_facenet.py -e 30 -bs 8 -r -rw /home/s1791387/facescrub-data/new_data_max/model_weigths/job_short2_Jul_15_1100hrs/weights_14.pth -j long1 

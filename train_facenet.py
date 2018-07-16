@@ -252,6 +252,7 @@ def main():
         ep_end = time.time()
         print('Epoch {}/{}\t'
               'Time {epoch_time.val:.3f} ({epoch_time.avg:.3f})'.format(epoch, start_epoch + num_epochs - 1, epoch_time=epoch_time))
+        print('-'*20)
 
     print('Finished training')
 
