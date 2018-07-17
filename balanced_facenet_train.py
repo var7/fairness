@@ -270,7 +270,7 @@ def main():
         epoch_time.update(time.time() - ep_end)
         ep_end = time.time()
         print('Epoch {}/{}\t'
-              'Time {epoch_time.val:.3f} ({epoch_time.avg:.3f})'.format(epoch, start_epoch + num_epochs - 1, epoch_time=epoch_time))
+              'Time {epoch_time.val:.3f} sec ({epoch_time.avg:.3f} sec)'.format(epoch, start_epoch + num_epochs - 1, epoch_time=epoch_time))
         print('-'*20)
 
     print('Finished training')
