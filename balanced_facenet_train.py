@@ -172,13 +172,16 @@ def main():
 
     # criterion=nn.TripletMarginLoss(margin=triplet_margin, p=triplet_p)
     if args.semi_hard:
+        negative_selection_fn_name = "semi-hard"
         negative_selection_fn = SemihardNegativeTripletSelector(margin=triplet_margin)
     elif args.hardest:
+        negative_selection_fn_name = "hardest"
         negative_selection_fn = HardestNegativeTripletSelector(margin=triplet_margin)
     else:
+        negative_selection_fn_name = "random negative"
         negative_selection_fn = RandomNegativeTripletSelector(margin=triplet_margin)
-    print('Triplet selection method set to {}'.format(negative_selection_fn.__name__))
-    
+    print('Triplet selection method set to {}'.format(negative_selection_fn_name))
+
     criterion = OnlineTripletLoss(negative_selection_fn, margin=triplet_margin)
     optimizer = optim.Adam(inception.parameters(), lr=learning_rate)
     scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
@@ -232,7 +235,7 @@ def main():
         'triplet_margin': triplet_margin,
         'triplet_p': triplet_p,
         'criterion': criterion,
-        'negative_selection_fn': negative_selection_fn
+        'negative_selection_fn': negative_selection_fn_name
     }
     save_hyperparams(hyperparams=hyperparams, path=WEIGHTS_PATH)
     ############## Training #############

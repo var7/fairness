@@ -216,7 +216,6 @@ class FunctionNegativeTripletSelector(TripletSelector):
 
         return torch.LongTensor(triplets)
 
-
 def HardestNegativeTripletSelector(margin, cpu=False): return FunctionNegativeTripletSelector(margin=margin,
                                                                                  negative_selection_fn=hardest_negative,
                                                                                  cpu=cpu)
