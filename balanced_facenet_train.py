@@ -140,23 +140,15 @@ def main():
     print('Validation data loaded from {}. Length: {}'.format(
         VALID_PATH, len(val_df)))
 
-    triplet_train_df = TripletFaceScrub(train_df, train=True)
-    print('Train data converted to triplet form. Length: {}'.format(
-        len(triplet_train_df)))
-
-    triplet_val_df = TripletFaceScrub(val_df, train=False)
-    print('Validation data converted to triplet form. Length: {}'.format(
-        len(triplet_val_df)))
-
     online_train_loader = torch.utils.data.DataLoader(
         train_df, batch_sampler=train_batch_sampler, pin_memory=True, num_workers=args.workers)
 
-    print('Train loader created. Length of train loader: {}'.format(
+    print('Online train loader created. Length: {}'.format(
         len(online_train_loader)))
 
     online_val_loader = torch.utils.data.DataLoader(
         val_df, batch_sampler=val_batch_sampler, pin_memory=True, num_workers=args.workers)
-    print('Val triplet loader created. Length of val load: {}'.format(
+    print('Online val loader created. Length: {}'.format(
         len(online_val_loader)))
 
     ############## set up models #############
@@ -197,7 +189,8 @@ def main():
         start_epoch = checkpoint['epoch']
         inception.load_state_dict(checkpoint['state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer'])
-        best_loss = checkpoint['best_loss']
+        if 'best_loss' in checkpoint:
+            best_loss = checkpoint['best_loss']
         # scheduler.load_state_dict(checkpoint['scheduler'])
         print("=> loaded checkpoint '{}' (trained for {} epochs)".format(
             resume_weights, checkpoint['epoch']))
