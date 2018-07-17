@@ -58,6 +58,10 @@ parser.add_argument('--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 parser.add_argument('--debug', action='store_true',
                     help='flag for debugging. If true only 1 mini batch is run')
+group = parser.add_mutually_exclusive_group()
+group.add_argument('--semi-hard', action='store_true', help='will do online selection with semi-hard negatives')
+group.add_argument('--hardest', action='store_true', help='will do online triplet selection with hardest negatives')
+
 best_loss = 1e2
 
 
@@ -167,7 +171,14 @@ def main():
     # loss_fn = OnlineTripletLoss(triplet_margin, RandomNegativeTripletSelector(margin))
 
     # criterion=nn.TripletMarginLoss(margin=triplet_margin, p=triplet_p)
-    negative_selection_fn = SemihardNegativeTripletSelector(margin=triplet_margin)
+    if args.semi_hard:
+        negative_selection_fn = SemihardNegativeTripletSelector(margin=triplet_margin)
+    elif args.hardest:
+        negative_selection_fn = HardestNegativeTripletSelector(margin=triplet_margin)
+    else:
+        negative_selection_fn = RandomNegativeTripletSelector(margin=triplet_margin)
+    print('Triplet selection method set to {}'.format(negative_selection_fn.__name__))
+    
     criterion = OnlineTripletLoss(negative_selection_fn, margin=triplet_margin)
     optimizer = optim.Adam(inception.parameters(), lr=learning_rate)
     scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
