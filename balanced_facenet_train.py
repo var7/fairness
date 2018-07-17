@@ -84,7 +84,7 @@ def main():
     JOB_NUMBER = "{}_{}".format(
         args.job_number, CURR_DATE) if args.job_number is not None else CURR_DATE
     WEIGHTS_PATH = os.path.join(
-        DATA_PATH, 'model_weigths', 'job_{}'.format(JOB_NUMBER))
+        DATA_PATH, 'balanced_model_weigths', 'job_{}'.format(JOB_NUMBER))
     ############## hyper parameters #############
     batch_size = args.batch_size
     input_size = 299
