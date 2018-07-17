@@ -223,10 +223,10 @@ class FaceScrubBalancedBatchSampler(BatchSampler):
     def __init__(self, dataset, n_classes, n_samples):
         self.dataset = dataset
         self.pids = self.dataset.pids
-        # self.pids_to_indices = {pid:
-        #     np.where(self.dataset.facescrub_dataset.faces_frame.person_id == pid)[0]
-        #     for pid in self.pids}
-        self.pids_to_indices = self.dataset.pids_to_indices
+        self.pids_to_indices = {pid:
+            np.where(self.dataset.faces_frame.person_id == pid)[0]
+            for pid in self.pids}
+        # self.pids_to_indices = self.dataset.pids_to_indices
 
         for pid in self.pids:
             np.random.shuffle(self.pids_to_indices[pid])

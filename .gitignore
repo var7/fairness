@@ -12,3 +12,4 @@ fastai/
 __pycache__/
 new_data/
 *.err
+model_weights/
