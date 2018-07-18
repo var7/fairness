@@ -220,7 +220,9 @@ def main():
     else:
         lr_epoch = start_epoch
     if args.cosine:
-        scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max, last_epoch=lr_epoch)
+        T_max = args.num_epochs
+        eta_min = 0.01
+        scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=T_max, eta_min=eta_min, last_epoch=lr_epoch)
     else:
         optimizer = optim.Adam(inception.parameters(), lr=learning_rate)
         for epoch in range(0, lr_epoch):
