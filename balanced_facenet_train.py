@@ -216,16 +216,16 @@ def main():
             resume_weights, checkpoint['epoch']))
 
     if args.lr_restart:
-        lr_epoch = 0
+        lr_epoch = -1
     else:
         lr_epoch = start_epoch
     if args.cosine:
-        T_max = args.num_epochs
+        T_max = args.epochs
         eta_min = 0.01
         scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=T_max, eta_min=eta_min, last_epoch=lr_epoch)
     else:
         optimizer = optim.Adam(inception.parameters(), lr=learning_rate)
-        for epoch in range(0, lr_epoch):
+        for epoch in range(0, lr_epoch+1):
             scheduler.step()
     ############## Send model to GPU ############
     if cuda:
