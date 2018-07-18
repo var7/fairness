@@ -205,6 +205,7 @@ def main():
         optimizer.load_state_dict(checkpoint['optimizer'])
         if 'best_loss' in checkpoint:
             best_loss = checkpoint['best_loss']
+            print('Best loss loaded as {}'.format(best_loss))
         # scheduler.load_state_dict(checkpoint['scheduler'])
         print("=> loaded checkpoint '{}' (trained for {} epochs)".format(
             resume_weights, checkpoint['epoch']))
