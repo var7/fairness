@@ -58,6 +58,10 @@ parser.add_argument('--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 parser.add_argument('--debug', action='store_true',
                     help='flag for debugging. If true only 1 mini batch is run')
+parser.add_argument('--cosine', action='store_true',
+                    help='use cosine annealing instead of step annealing for learning rate annealing')
+parser.add_argument('--lr-restart', action='store_true',
+                    help='reset the learning rate')
 group = parser.add_mutually_exclusive_group()
 group.add_argument('--semi-hard', action='store_true', help='will do online selection with semi-hard negatives')
 group.add_argument('--hardest', action='store_true', help='will do online triplet selection with hardest negatives')
@@ -183,8 +187,9 @@ def main():
     print('Triplet selection method set to {}'.format(negative_selection_fn_name))
 
     criterion = OnlineTripletLoss(negative_selection_fn, margin=triplet_margin)
-    optimizer = optim.Adam(inception.parameters(), lr=learning_rate)
-    scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+
+    # scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+
     ############## Load saved weights #############
     if resume_training:
         resume_weights = args.resume_weights
@@ -209,7 +214,16 @@ def main():
         # scheduler.load_state_dict(checkpoint['scheduler'])
         print("=> loaded checkpoint '{}' (trained for {} epochs)".format(
             resume_weights, checkpoint['epoch']))
-        for epoch in range(0, start_epoch):
+
+    if args.lr_restart:
+        lr_epoch = 0:
+    else:
+        lr_epoch = start_epoch
+    if args.cosine:
+        scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max, last_epoch=lr_epoch)
+    else:
+        optimizer = optim.Adam(inception.parameters(), lr=learning_rate)
+        for epoch in range(0, lr_epoch):
             scheduler.step()
     ############## Send model to GPU ############
     if cuda:
