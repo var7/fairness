@@ -215,17 +215,17 @@ def main():
         print("=> loaded checkpoint '{}' (trained for {} epochs)".format(
             resume_weights, checkpoint['epoch']))
 
-    if args.lr_restart:
-        lr_epoch = -1
-    else:
-        lr_epoch = start_epoch
+    # if args.lr_restart:
+    #     lr_epoch = -1
+    # else:
+    #     lr_epoch = start_epoch
     if args.cosine:
         T_max = args.epochs
         eta_min = 0.01
-        scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=T_max, eta_min=eta_min, last_epoch=lr_epoch)
+        scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=T_max, eta_min=eta_min)
     else:
         scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
-        for epoch in range(0, lr_epoch+1):
+        for epoch in range(0, start_epoch):
             scheduler.step()
     ############## Send model to GPU ############
     if cuda:
