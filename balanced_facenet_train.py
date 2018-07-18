@@ -216,7 +216,7 @@ def main():
             resume_weights, checkpoint['epoch']))
 
     if args.lr_restart:
-        lr_epoch = 0:
+        lr_epoch = 0
     else:
         lr_epoch = start_epoch
     if args.cosine:
