@@ -187,8 +187,8 @@ def main():
     print('Triplet selection method set to {}'.format(negative_selection_fn_name))
 
     criterion = OnlineTripletLoss(negative_selection_fn, margin=triplet_margin)
-
-    # scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+    optimizer = optim.Adam(inception.parameters(), lr=learning_rate)
+    #
 
     ############## Load saved weights #############
     if resume_training:
@@ -224,7 +224,7 @@ def main():
         eta_min = 0.01
         scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=T_max, eta_min=eta_min, last_epoch=lr_epoch)
     else:
-        optimizer = optim.Adam(inception.parameters(), lr=learning_rate)
+        scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
         for epoch in range(0, lr_epoch+1):
             scheduler.step()
     ############## Send model to GPU ############
