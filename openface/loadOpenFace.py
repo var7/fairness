@@ -270,10 +270,10 @@ if __name__ == '__main__':
         return I_
 
     img_paths = [	\
-        '/home/polphit/Downloads/face_images/lennon-1.jpg_aligned.png',	\
-        '/home/polphit/Downloads/face_images/lennon-2.jpg_aligned.png',	\
-        '/home/polphit/Downloads/face_images/clapton-1.jpg_aligned.png',	\
-        '/home/polphit/Downloads/face_images/clapton-2.jpg_aligned.png',	\
+        '/home/s1791387/facescrub-data/old_data/actor/faces/Tom_Hanks/Tom_Hanks_110212_54757.jpeg',	\
+        '/home/s1791387/facescrub-data/old_data/actor/faces/Tom_Hanks/Tom_Hanks_110195_54743.jpeg',	\
+        '/home/s1791387/facescrub-data/old_data/actress/faces/Jennifer_Aniston/Jennifer_Aniston_5689_2693.jpeg',	\
+        '/home/s1791387/facescrub-data/old_data/actress/faces/Jennifer_Aniston/Jennifer_Aniston_5735_2722.jpeg',	\
     ]
     imgs = []
     for img_path in img_paths:
@@ -291,4 +291,3 @@ if __name__ == '__main__':
             print(img_paths[i].split('/')[-1], img_paths[j].split('/')[-1], torch.dot(df, df))
 
     # in OpenFace's sample code, cosine distance is usually used for f (128d).
-    
