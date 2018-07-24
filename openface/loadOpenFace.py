@@ -218,7 +218,10 @@ class netOpenFace(nn.Module):
 
 def prepareOpenFace(useCuda=True, gpuDevice=0, useMultiGPU=False):
     model = netOpenFace(useCuda, gpuDevice)
-    model.load_state_dict(torch.load(os.path.join(containing_dir, 'openface.pth')))
+    if useCuda:
+        model.load_state_dict(torch.load(os.path.join(containing_dir, 'openface.pth')))
+    else:
+        model.load_state_dict(torch.load(os.path.join(containing_dir, 'openface.pth'), map_location=lambda storage, loc: storage))
 
     if useMultiGPU:
         model = nn.DataParallel(model)

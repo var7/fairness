@@ -96,7 +96,7 @@ def main():
         DATA_PATH, 'balanced_model_weigths', 'job_{}'.format(JOB_NUMBER))
     ############## hyper parameters #############
     batch_size = args.batch_size
-    input_size = 299
+    input_size = 99
     output_dim = 128
     learning_rate = args.learning_rate
     num_epochs = args.epochs
@@ -161,10 +161,12 @@ def main():
         len(online_val_loader)))
 
     ############## set up models #############
-    inception = models.inception_v3(pretrained=True)
-    inception.aux_logits = False
-    num_ftrs = inception.fc.in_features
-    inception.fc = nn.Linear(num_ftrs, output_dim)
+    # inception = models.inception_v3(pretrained=True)
+    # inception.aux_logits = False
+    # num_ftrs = inception.fc.in_features
+    # inception.fc = nn.Linear(num_ftrs, output_dim)
+
+    openface = prepareOpenFace(useCuda=cuda)
 
     # tripletinception=TripletNet(inception)
 
@@ -188,7 +190,7 @@ def main():
     print('Triplet selection method set to {}'.format(negative_selection_fn_name))
 
     criterion = OnlineTripletLoss(negative_selection_fn, margin=triplet_margin)
-    optimizer = optim.Adam(inception.parameters(), lr=learning_rate)
+    optimizer = optim.Adam(openface.parameters(), lr=learning_rate)
     #
 
     ############## Load saved weights #############
@@ -229,14 +231,14 @@ def main():
         for epoch in range(0, start_epoch):
             scheduler.step()
     ############## Send model to GPU ############
-    if cuda:
-        inception.cuda()
-        print('Sent model to gpu {}'.format(
-            next(inception.parameters()).is_cuda))
-        if args.multi_gpu:
-            if torch.cuda.device_count() > 1:
-                print("Using {} GPUS".format(torch.cuda.device_count()))
-                inception = nn.DataParallel(inception).cuda()
+    # if cuda:
+    #     inception.cuda()
+    #     print('Sent model to gpu {}'.format(
+    #         next(inception.parameters()).is_cuda))
+    #     if args.multi_gpu:
+    #         if torch.cuda.device_count() > 1:
+    #             print("Using {} GPUS".format(torch.cuda.device_count()))
+    #             inception = nn.DataParallel(inception).cuda()
     ############## Save Hyper params to file ############
     hyperparams = {
         'JOB_NUMBER': JOB_NUMBER,
@@ -268,7 +270,7 @@ def main():
         scheduler.step()
 
         # train
-        train_loss = train(online_train_loader, inception, criterion, optimizer, epoch, device)
+        train_loss = train(online_train_loader, openface, criterion, optimizer, epoch, device)
         train_losses.append(train_loss)
         # validate
         print('-'*10)
