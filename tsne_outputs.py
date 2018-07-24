@@ -149,14 +149,17 @@ train_embeddings = torch.Tensor()
 thumbnails = torch.Tensor()
 
 inception.eval()
-
+topil = transforms.ToPILImage()
+resizetransform = transforms.Resize((32, 32))
 for ind, img in enumerate(imgs):
 
     embedding = inception(img)
     train_embeddings = torch.cat((train_embeddings, embedding))
-    thumbnails = torch.cat((thumbnails, img))
+    small_img = resizetransform(topil(img))
+    thumbnails = torch.cat((thumbnails, small_img))
     if ind % 20 == 0:
         print('{} images completed'.format(ind))
+    if ind == 300: break
 
 
 # inception.eval()
