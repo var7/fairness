@@ -37,20 +37,10 @@ VALID_PATH = os.path.join(DATA_PATH, 'val_full_with_ids.txt')
 TEST_PATH = os.path.join(DATA_PATH, 'test_full_with_ids.txt')
 WEIGHTS_PATH = '/home/s1791387/facescrub-data/new_data_max/balanced_model_weigths/job_cosine5_semi_std_Jul_20_1900hrs/weights_65.pth'
 
-
-# In[4]:
-
-input_size = 299
-output_dim = 128
-learning_rate = 1e2
-num_epochs = 1
-start_epoch = 0
-
 triplet_margin = 1.  # margin
 triplet_p = 2  # norm degree for distance calculation
 
 resume_training = True
-workers = 4
 use_cuda = False
 
 
@@ -96,42 +86,11 @@ train_df = FaceScrubDataset(
 val_df = FaceScrubDataset(
     txt_file=VALID_PATH, root_dir=DATA_PATH, transform=data_transforms['val'])
 
-train_loader=torch.utils.data.DataLoader(
-        train_df, batch_size=batch_size, shuffle=True, pin_memory=pin_memory, num_workers=workers)
-print('Train loader created. Length of train loader: {}'.format(
-        len(train_loader)))
-
-val_loader=torch.utils.data.DataLoader(
-        val_df, batch_size=batch_size, shuffle=False, pin_memory=pin_memory, num_workers=workers)
-print('Val loader created. Length of train loader: {}'.format(
-        len(val_loader)))
-
-
-# In[7]:
-
-
-train_batch_sampler = FaceScrubBalancedBatchSampler(
-        train_df, n_classes=5, n_samples=10)
-val_batch_sampler = FaceScrubBalancedBatchSampler(
-    val_df, n_classes=5, n_samples=10)
 
 print('Train data loaded from {}. Length: {}'.format(
     TRAIN_PATH, len(train_df)))
 print('Validation data loaded from {}. Length: {}'.format(
     VALID_PATH, len(val_df)))
-
-online_train_loader = torch.utils.data.DataLoader(
-    train_df, batch_sampler=train_batch_sampler, pin_memory=pin_memory, num_workers=workers)
-
-print('Online train loader created. Length: {}'.format(
-    len(online_train_loader)))
-
-online_val_loader = torch.utils.data.DataLoader(
-    val_df, batch_sampler=val_batch_sampler, pin_memory=pin_memory, num_workers=workers)
-
-
-# In[8]:
-
 
 inception=models.inception_v3(pretrained=True)
 inception.aux_logits=False
@@ -139,10 +98,6 @@ num_ftrs=inception.fc.in_features
 inception.fc=nn.Linear(num_ftrs, output_dim)
 
 criterion=nn.TripletMarginLoss(margin=triplet_margin, p=triplet_p)
-
-optimizer=optim.Adam(inception.parameters(), lr=learning_rate)
-scheduler=lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
-
 
 # In[9]:
 
@@ -168,87 +123,10 @@ if resume_training:
         scheduler.step()
 
 
-# In[10]:
-
-
 if cuda:
     inception.cuda()
     print('Sent model to gpu {}'.format(
         next(inception.parameters()).is_cuda))
-
-
-# In[11]:
-
-
-def train(train_loader, model, criterion, optimizer, epoch, device):
-    batch_time = AverageMeter()
-    data_time = AverageMeter()
-    losses = AverageMeter()
-
-    # switch to train mode
-    model.train()
-
-    end = time.time()
-    for batch_idx, (imgs, _) in enumerate(train_loader):
-        data_time.update(time.time() - end)
-        imgs = [img.to(device) for img in imgs]
-
-        embed_anchor, embed_pos, embed_neg=model(imgs[0], imgs[1], imgs[2])
-        loss = criterion(embed_anchor, embed_pos, embed_neg)
-
-        losses.update(loss.item(), imgs[0].size(0))
-
-
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-
-        # measure elapsed time
-        batch_time.update(time.time() - end)
-        end = time.time()
-
-        if batch_idx % args.print_freq == 0:
-            print('Epoch: [{0}][{1}/{2}]\t'
-                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                  'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
-                  'Loss {loss.val:.4f} ({loss.avg:.4f})'.format(
-                   epoch, batch_idx, len(train_loader), batch_time=batch_time,
-                   data_time=data_time, loss=losses))
-    return losses.avg
-
-def validate(val_loader, model, criterion, device):
-    batch_time = AverageMeter()
-    losses = AverageMeter()
-
-    # switch to evaluate mode
-    model.eval()
-
-    with torch.no_grad():
-        end = time.time()
-        for i, (imgs, _) in enumerate(val_loader):
-            imgs = [img.to(device) for img in imgs]
-
-            embed_anchor, embed_pos, embed_neg=model(imgs[0], imgs[1], imgs[2])
-
-            loss = criterion(embed_anchor, embed_pos, embed_neg)
-
-            losses.update(loss.item(), imgs[0].size(0))
-
-            # measure elapsed time
-            batch_time.update(time.time() - end)
-            end = time.time()
-
-            if i % args.print_freq == 0:
-                print('Test: [{0}/{1}]\t'
-                      'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                      'Loss {loss.val:.4f} ({loss.avg:.4f})'.format(
-                       i, len(val_loader), batch_time=batch_time, loss=losses))
-
-    return losses.avg
-
-
-# In[25]:
-
 
 classes = [10, 5, 279, 330]
 imgs = []
@@ -304,10 +182,6 @@ for ind, img in enumerate(imgs):
 def tsne(embeddings):
     import sklearn.manifold
     return torch.from_numpy(sklearn.manifold.TSNE(n_iter = 250).fit_transform(embeddings.numpy()))
-
-
-# In[ ]:
-
 
 def svg(points, labels, thumbnails, legend_size = 1e-1, legend_font_size = 5e-2, circle_radius = 5e-3):
 	points = (points - points.min(0)[0]) / (points.max(0)[0] - points.min(0)[0])
