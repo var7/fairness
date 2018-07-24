@@ -29,13 +29,33 @@ from utils import save_checkpoint, save_hyperparams, AverageMeter, HardestNegati
 
 
 # In[3]:
+parser = argparse.ArgumentParser()
 
+parser.add_argument("-d", "--data-path", dest="data_path",
+                    help="path to data files")
 
-DATA_PATH = '/home/s1791387/facescrub-data/new_data_max/'
+parser.add_argument("-rw", "--weigths", dest="resume_weights",
+                    help="Path to weights file")
+
+args = parser.parse_args()
+
+if args.data_path is not None:
+        if os.path.exists(args.data_path):
+            DATA_PATH = args.data_path
+        else:
+            print('Data path: {} does not exist'.format(args.data_path))
+else:
+    DATA_PATH = '/home/s1791387/facescrub-data/new_data_max/'
+    print('No data path provided. Setting to cluster default: {}'.format(DATA_PATH))
+
 TRAIN_PATH = os.path.join(DATA_PATH, 'train_full_with_ids.txt')
 VALID_PATH = os.path.join(DATA_PATH, 'val_full_with_ids.txt')
 TEST_PATH = os.path.join(DATA_PATH, 'test_full_with_ids.txt')
-WEIGHTS_PATH = '/home/s1791387/facescrub-data/new_data_max/balanced_model_weigths/job_cosine5_semi_std_Jul_20_1900hrs/weights_65.pth'
+
+if args.resume_weights is not None:
+    WEIGHTS_PATH = args.resume_weights
+else:
+    WEIGHTS_PATH = '/home/s1791387/facescrub-data/new_data_max/balanced_model_weigths/job_cosine5_semi_std_Jul_20_1900hrs/weights_65.pth'
 
 triplet_margin = 1.  # margin
 triplet_p = 2  # norm degree for distance calculation
@@ -93,23 +113,23 @@ print('Train data loaded from {}. Length: {}'.format(
 print('Validation data loaded from {}. Length: {}'.format(
     VALID_PATH, len(val_df)))
 
-inception=models.inception_v3(pretrained=True)
-inception.aux_logits=False
-num_ftrs=inception.fc.in_features
-inception.fc=nn.Linear(num_ftrs, output_dim)
+inception = models.inception_v3(pretrained=True)
+inception.aux_logits = False
+num_ftrs = inception.fc.in_features
+inception.fc = nn.Linear(num_ftrs, output_dim)
 
-criterion=nn.TripletMarginLoss(margin=triplet_margin, p=triplet_p)
+criterion = nn.TripletMarginLoss(margin=triplet_margin, p=triplet_p)
 
 # In[9]:
 
 
 if resume_training:
-    resume_weights=WEIGHTS_PATH
+    resume_weights = WEIGHTS_PATH
     if cuda:
-        checkpoint=torch.load(resume_weights)
+        checkpoint = torch.load(resume_weights)
     else:
         # Load GPU model on CPU
-        checkpoint=torch.load(resume_weights,
+        checkpoint = torch.load(resume_weights,
                                 map_location=lambda storage,
                                 loc: storage)
 
@@ -138,6 +158,7 @@ for ind, row in train_df.faces_frame.iterrows():
         img.unsqueeze_(0)
         imgs.append(img)
         person_id.append(row['person_id'])
+        if count == 60: break
 #         embedding = inception(img)
 #         train_embeddings = torch.cat((train_embeddings, embedding))
 #     if count / 10 == 0: print(count)
@@ -153,14 +174,14 @@ inception.eval()
 topil = transforms.ToPILImage()
 totensor = transforms.ToTensor()
 resizetransform = transforms.Resize((32, 32))
-for ind, img in enumerate(imgs):
-
-    embedding = inception(img)
-    train_embeddings = torch.cat((train_embeddings, embedding))
-    small_img = totensor(resizetransform(topil(img.squeeze_(0).cpu())))
-    #thumbnails = torch.cat((thumbnails.cuda(), small_img.cuda()))
-    if ind % 20 == 0:
-        print('{} images completed'.format(ind))
+with torch.no_grad():
+    for ind, img in enumerate(imgs):
+        embedding = inception(img)
+        train_embeddings = torch.cat((train_embeddings, embedding))
+        small_img = totensor(resizetransform(topil(img.squeeze_(0).cpu())))
+        thumbnails = torch.cat((thumbnails.cuda(), small_img.cuda()))
+        if ind % 20 == 0:
+            print('{} images completed'.format(ind))
 
 
 # inception.eval()
@@ -182,14 +203,15 @@ for ind, img in enumerate(imgs):
 
 def tsne(embeddings):
     import sklearn.manifold
-    return torch.from_numpy(sklearn.manifold.TSNE(n_iter = 250).fit_transform(embeddings.numpy()))
+    return torch.from_numpy(sklearn.manifold.TSNE(n_iter=250).fit_transform(embeddings.cpu().numpy()))
 
-def svg(points, labels, thumbnails, legend_size = 1e-1, legend_font_size = 5e-2, circle_radius = 5e-3):
+print(sorted(set(person_id)))
+def svg(points, labels, thumbnails, legend_size=1e-1, legend_font_size=5e-2, circle_radius=5e-3):
 	points = (points - points.min(0)[0]) / (points.max(0)[0] - points.min(0)[0])
 	class_index = sorted(set(labels))
-	class_colors = [360.0 * i / len(class_index) for i in range(len(class_index))]
+    class_colors = [360.0 * i / len(class_index) for i in range(len(class_index))]
 	colors = [class_colors[class_index.index(label)] for label in labels]
-	thumbnails_base64 = [base64.b64encode(cv2.imencode('.jpg', img.mul(255).permute(1, 2, 0).numpy()[..., ::-1])[1]) for img in thumbnails]
+	thumbnails_base64 = [base64.b64encode(cv2.imencode('.jpg', img.mul(255).unsqueeze_(0).permute(1, 2, 0).cpu().numpy()[..., ::-1])[1]) for img in thumbnails]
 	return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1">' + 	   ''.join(map('''<circle cx="{}" cy="{}" title="{}" fill="hsl({}, 50%, 50%)" r="{}" desc="data:image/jpeg;base64,{}" onmouseover="evt.target.ownerDocument.getElementById('preview').setAttribute('href', evt.target.getAttribute('desc')); evt.target.ownerDocument.getElementById('label').textContent = evt.target.getAttribute('title');" />'''.format, points[:, 0], points[:, 1], labels, colors, [circle_radius] * len(points), thumbnails_base64)) + 	   '''<image id="preview" x="0" y="{legend_size}" width="{legend_size}" height="{legend_size}" />
 	   <text id="label" x="0" y="{legend_size}" font-size="{legend_font_size}" />
 	   </svg>'''.format(legend_size = legend_size, legend_font_size = legend_font_size)
@@ -197,13 +219,15 @@ def svg(points, labels, thumbnails, legend_size = 1e-1, legend_font_size = 5e-2,
 
 # In[ ]:
 
-import pickle
+# print(thumbnails.shape)
+# for img in thumbnails:
+#     print(img.shape)
+#     img = img.mul(255).unsqueeze_(0).permute(1, 2, 0).cpu().numpy()
 tsne_embeddings = tsne(train_embeddings)
-with open('tsne_train_embeddings.pkl', 'w+') as f:
-    pickle.dump(tsne_embeddings, f)
 
 # In[ ]:
-
+import visdom
+vis = visdom.Visdom()
 
 import cv2
 import base64
@@ -213,3 +237,9 @@ import base64
 
 
 open('train_tsne.svg', 'w').write(svg(tsne_embeddings, person_id, thumbnails))
+vis.svg('train_tsne.svg')
+
+import pickle
+
+with open('tsne_train_embeddings.pkl', 'w') as f:
+    pickle.dump(tsne_embeddings, f)
