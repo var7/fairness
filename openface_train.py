@@ -281,7 +281,7 @@ def main():
 
         state = {
             'epoch': epoch,
-            'state_dict': inception.state_dict(),
+            'state_dict': openface.state_dict(),
             'optimizer': optimizer.state_dict(),
             'train_losses': train_losses,
             'val_losses': val_losses,
@@ -325,8 +325,7 @@ def train(train_loader, model, criterion, optimizer, epoch, device):
         targets.to(device)
 
         embeddings, _ = model(imgs)
-        print(embeddings.shape)
-        print(type(embeddings))
+
         loss = criterion(embeddings, targets)
 
         losses.update(loss.item(), imgs.size(0))
