@@ -371,7 +371,7 @@ def validate(val_loader, model, criterion, device):
             targets = labels['person_id']
             targets.to(device)
 
-            embeddings = model(imgs)
+            embeddings, _ = model(imgs)
 
             loss = criterion(embeddings, targets)
 
