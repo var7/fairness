@@ -115,7 +115,6 @@ if resume_training:
 
     start_epoch=checkpoint['epoch']
     inception.load_state_dict(checkpoint['state_dict'])
-    optimizer.load_state_dict(checkpoint['optimizer'])
     best_loss = checkpoint['best_loss']
     # scheduler.load_state_dict(checkpoint['scheduler'])
     print("=> loaded checkpoint '{}' (trained for {} epochs)".format(
