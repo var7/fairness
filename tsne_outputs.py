@@ -42,7 +42,7 @@ triplet_p = 2  # norm degree for distance calculation
 input_size = 299
 output_dim = 128
 resume_training = True
-use_cuda = False
+use_cuda = True
 
 
 # In[5]:
@@ -146,19 +146,19 @@ for ind, row in train_df.faces_frame.iterrows():
 #         gender = np.concatenate((gender, label['gender']))
 
 train_embeddings = torch.Tensor()
-thumbnails = torch.Tensor()
+thumbnails = torch.Tensor().cuda()
+
 
 inception.eval()
 topil = transforms.ToPILImage()
+totensor = transforms.ToTensor()
 resizetransform = transforms.Resize((32, 32))
 for ind, img in enumerate(imgs):
 
     embedding = inception(img)
     train_embeddings = torch.cat((train_embeddings, embedding))
-    print(img.shape)
-    small_img = resizetransform(topil(img.unsqueeze_(0)))
-
-    thumbnails = torch.cat((thumbnails, small_img))
+    small_img = totensor(resizetransform(topil(img.squeeze_(0).cpu())))
+    #thumbnails = torch.cat((thumbnails.cuda(), small_img.cuda()))
     if ind % 20 == 0:
         print('{} images completed'.format(ind))
 
@@ -197,9 +197,10 @@ def svg(points, labels, thumbnails, legend_size = 1e-1, legend_font_size = 5e-2,
 
 # In[ ]:
 
-
+import pickle
 tsne_embeddings = tsne(train_embeddings)
-
+with open('tsne_train_embeddings.pkl', 'w+') as f:
+    pickle.dump(tsne_embeddings, f)
 
 # In[ ]:
 
