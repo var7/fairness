@@ -325,6 +325,8 @@ def train(train_loader, model, criterion, optimizer, epoch, device):
         targets.to(device)
 
         embeddings = model(imgs)
+        print(embeddings.shape)
+        print(type(embeddings))
         loss = criterion(embeddings, targets)
 
         losses.update(loss.item(), imgs.size(0))
