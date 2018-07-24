@@ -155,7 +155,9 @@ for ind, img in enumerate(imgs):
 
     embedding = inception(img)
     train_embeddings = torch.cat((train_embeddings, embedding))
+    print(img.shape)
     small_img = resizetransform(topil(img.unsqueeze_(0)))
+
     thumbnails = torch.cat((thumbnails, small_img))
     if ind % 20 == 0:
         print('{} images completed'.format(ind))
