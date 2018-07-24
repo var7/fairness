@@ -324,7 +324,7 @@ def train(train_loader, model, criterion, optimizer, epoch, device):
         targets = labels['person_id']
         targets.to(device)
 
-        embeddings = model(imgs)
+        embeddings, _ = model(imgs)
         print(embeddings.shape)
         print(type(embeddings))
         loss = criterion(embeddings, targets)
