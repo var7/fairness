@@ -274,7 +274,7 @@ def main():
         train_losses.append(train_loss)
         # validate
         print('-'*10)
-        val_loss = validate(online_val_loader, inception, criterion, device)
+        val_loss = validate(online_val_loader, openface, criterion, device)
 
         print('Avg validation loss: {}'.format(val_loss))
         val_losses.append(val_loss)
