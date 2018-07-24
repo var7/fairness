@@ -113,14 +113,11 @@ if resume_training:
                                 map_location=lambda storage,
                                 loc: storage)
 
-    start_epoch=checkpoint['epoch']
     inception.load_state_dict(checkpoint['state_dict'])
     best_loss = checkpoint['best_loss']
     # scheduler.load_state_dict(checkpoint['scheduler'])
     print("=> loaded checkpoint '{}' (trained for {} epochs)".format(
         resume_weights, checkpoint['epoch']))
-    for epoch in range(0, start_epoch):
-        scheduler.step()
 
 
 if cuda:
