@@ -39,7 +39,7 @@ WEIGHTS_PATH = '/home/s1791387/facescrub-data/new_data_max/balanced_model_weigth
 
 triplet_margin = 1.  # margin
 triplet_p = 2  # norm degree for distance calculation
-
+input_size = 299
 resume_training = True
 use_cuda = False
 
