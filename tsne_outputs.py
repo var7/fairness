@@ -149,7 +149,7 @@ classes = [10, 5, 279, 330]
 imgs = []
 person_id = []
 gender = []
-count_5, count_10, count_279, count_330 = 0
+count_5, count_10, count_279, count_330 = 0, 0, 0, 0
 
 
 for ind, row in train_df.faces_frame.iterrows():
@@ -250,8 +250,6 @@ def svg(points, labels, thumbnails, legend_size=1e-1, legend_font_size=5e-2, cir
 tsne_embeddings = tsne(train_embeddings)
 
 # In[ ]:
-import visdom
-vis = visdom.Visdom()
 
 import cv2
 import base64
@@ -261,7 +259,6 @@ import base64
 
 
 open('train_tsne.svg', 'w').write(svg(tsne_embeddings, person_id, thumbnails))
-vis.svg('train_tsne.svg')
 
 import pickle
 
