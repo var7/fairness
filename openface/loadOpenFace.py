@@ -183,6 +183,7 @@ class netOpenFace(nn.Module):
 
         if useCuda:
             self.cuda(gpuDevice)
+            print('Sent model to GPU')
 
 
     def forward(self, input):
@@ -213,7 +214,7 @@ class netOpenFace(nn.Module):
         x_norm = torch.sqrt(torch.sum(x**2, 1) + 1e-6)
         x = torch.div(x, x_norm.view(-1, 1).expand_as(x))
 
-        return (x, x_736)
+        return x
 
 
 def prepareOpenFace(useCuda=True, gpuDevice=0, useMultiGPU=False):
