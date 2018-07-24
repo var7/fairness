@@ -199,7 +199,7 @@ def main():
         if args.multi_gpu:
             if torch.cuda.device_count() > 1:
                 print('Loading onto GPU')
-                inception = nn.DataParallel(inception).cuda()
+                openface = nn.DataParallel(openface).cuda()
         if cuda:
             checkpoint = torch.load(resume_weights)
         else:
@@ -209,7 +209,7 @@ def main():
                                     loc: storage)
 
         start_epoch = checkpoint['epoch']
-        inception.load_state_dict(checkpoint['state_dict'])
+        openface.load_state_dict(checkpoint['state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer'])
         if 'best_loss' in checkpoint:
             best_loss = checkpoint['best_loss']
