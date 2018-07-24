@@ -170,7 +170,7 @@ def main():
 
     # tripletinception=TripletNet(inception)
 
-    params = sum(p.numel() for p in inception.parameters() if p.requires_grad)
+    params = sum(p.numel() for p in openface.parameters() if p.requires_grad)
     print('Number of params in triplet inception: {}'.format(params))
 
     ############## set up for training #############
