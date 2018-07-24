@@ -159,7 +159,6 @@ for ind, img in enumerate(imgs):
     thumbnails = torch.cat((thumbnails, small_img))
     if ind % 20 == 0:
         print('{} images completed'.format(ind))
-    if ind == 300: break
 
 
 # inception.eval()
