@@ -186,7 +186,7 @@ def main():
     epoch_time = AverageMeter()
     ep_end = time.time()
     for epoch in range(start_epoch, start_epoch + num_epochs):
-
+        print('Epoch: {}/{}'.format(epoch, start_epoch + num_epochs))
         scheduler_cls.step()
         scheduler_enc.step()
         # train
