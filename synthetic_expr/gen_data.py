@@ -1,21 +1,12 @@
 
 # coding: utf-8
 
-# In[5]:
-
-
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-get_ipython().run_line_magic('matplotlib', 'inline')
-
-
-# In[73]:
-
-
 import cairo
 num_imgs = 50000
-
+np.random.seed(1791387)
 img_size = 96
 min_object_size = 12
 max_object_size = 48
@@ -37,7 +28,6 @@ for i_img in range(num_imgs):
     cr.set_source_rgb(1, 1, 1)
     cr.paint()
     
-    # TODO: Try no overlap here.
     # Draw random shapes.
     for i_object in range(num_objects):
         shape = np.random.randint(num_shapes)
@@ -72,8 +62,8 @@ print(imgs.shape, shapes.shape, colors.shape)
 # In[99]:
 
 
-i = np.random.randint(num_imgs)
-plt.imshow(imgs[i], interpolation='none', origin='lower', extent=[0, img_size, 0, img_size])
+#i = np.random.randint(num_imgs)
+#plt.imshow(imgs[i], interpolation='none', origin='lower', extent=[0, img_size, 0, img_size])
 
 
 # In[105]:
