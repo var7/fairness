@@ -183,10 +183,11 @@ class ClassNet(nn.Module):
 
         self.fc1 = nn.Linear(input_size, 64)
         self.fc2 = nn.Linear(64, 1)
+        self.out_acc = nn.Sigmoid()
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
-        x = nn.Sigmoid(self.fc2(x))
+        x = self.out_acc(self.fc2(x))
         return x
 
 
