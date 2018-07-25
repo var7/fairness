@@ -81,8 +81,7 @@ def main():
         "%b"), time.strftime("%d"), time.strftime("%H"))
     JOB_NUMBER = "{}_{}".format(
         args.job_number, CURR_DATE) if args.job_number is not None else CURR_DATE
-    WEIGHTS_PATH = os.path.join(
-        DATA_PATH, 'synthetic_weights', 'job_{}'.format(JOB_NUMBER))
+    WEIGHTS_PATH = os.path.join('synthetic_weights', 'job_{}'.format(JOB_NUMBER))
     ############## hyper parameters #############
     batch_size = args.batch_size
     input_size = 96
@@ -170,8 +169,10 @@ def main():
         'num_epochs': num_epochs,
         'print_every': args.print_freq,
         'start_epoch': start_epoch,
-        'optimizer': optimizer,
-        'scheduler': scheduler,
+        'cls_optimizer': opt_cls,
+        'enc_optimizer': opt_enc,
+        'cls_scheduler': scheduler_cls,
+        'enc_scheduler': scheduler_enc,
         'criterion': criterion,
     }
     save_hyperparams(hyperparams=hyperparams, path=WEIGHTS_PATH)
@@ -184,8 +185,8 @@ def main():
     ep_end = time.time()
     for epoch in range(start_epoch, start_epoch + num_epochs):
 
-        scheduler.step()
-
+        scheduler_cls.step()
+        scheduler_enc.step()
         # train
         train_loss, train_acc = train_encoder_classifier_epoch(encoder,
                                 classifier, imgs_train, shapes_train, opt_enc,

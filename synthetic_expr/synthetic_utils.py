@@ -1,4 +1,5 @@
 import torch
+import os
 import torch.nn as nn
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
@@ -6,6 +7,7 @@ import torch.optim.lr_scheduler as lr_scheduler
 from torchvision import transforms, utils, models
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
+import torch.nn.functional as F
 
 def train_epoch(model, X, Y, opt, criterion, batch_size=64):
     model.train()
