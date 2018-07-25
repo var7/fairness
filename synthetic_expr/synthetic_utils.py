@@ -41,8 +41,9 @@ def train_epoch(model, X, Y, opt, criterion, batch_size=64):
 def train_encoder_classifier_epoch(encoder, classifier, X, Y, encoder_opt, classifier_opt, criterion, device, batch_size=64):
     encoder.train()
     classifier.train()
-    losses = []
-    acc = []
+    batch_time = AverageMeter()
+    losses = AverageMeter()
+    acc = AverageMeter()
     for beg_i in range(0, X.shape[0], batch_size):
         x_batch = X[beg_i:beg_i + batch_size]
         y_batch = Y[beg_i:beg_i + batch_size]
@@ -68,13 +69,18 @@ def train_encoder_classifier_epoch(encoder, classifier, X, Y, encoder_opt, class
         classifier_opt.step()
         encoder_opt.step()
 
-        losses.append(loss.item())
+        batch_time.update(time.time() - end)
+        end = time.time()
+
+        # (3) Compute gradients
+        losses.update(loss.item(), x_batch.size(0))
 
         preds = torch.round(y_hat.data).squeeze(1).cpu().numpy()
         accuracy = sum(preds == y_batch).cpu().numpy()/len(y_batch)
 
-        acc.append(accuracy)
-    return losses, acc
+        acc.update(accuracy, x_batch.size(0))
+
+    return losses.avg, acc.avg
 
 def validate_epoch(model, X, Y, criterion, batch_size=64):
     model.eval()
@@ -131,12 +137,12 @@ def validate_encoder_classifier_epoch(encoder, classifier, X, Y, criterion, devi
             # (3) Compute gradients
             losses.update(loss.item(), x_batch.size(0))
 
-            preds = torch.round(y_hat.data).squeeze(1).numpy()
-            accuracy = sum(preds == y_batch).numpy()/len(y_batch)
+            preds = torch.round(y_hat.data).squeeze(1).cpu().numpy()
+            accuracy = sum(preds == y_batch).cpu().numpy()/len(y_batch)
 
             acc.update(accuracy, x_batch.size(0))
 
-    return losses, acc
+    return losses.avg, acc.avg
 
 class LeNet(nn.Module):
 
