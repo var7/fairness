@@ -89,7 +89,7 @@ def train_encoder_classifier_epoch(encoder, classifier, X, Y, encoder_opt, class
         acc.update(accuracy, x_batch.size(0))
 
         if i % print_freq == 0:
-            print('Batch: [{1}/{2}]\t'
+            print('Batch: [{0}/{1}]\t'
                   'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                   'Loss {loss.val:.4f} ({loss.avg:.4f})'
                   'Accuracy {acc.val:.4f} ({acc.avg:.4f})'.format(i, X.shape[0]/batch_size, batch_time=batch_time,
