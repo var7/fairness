@@ -147,9 +147,11 @@ def main():
     if args.cosine:
         T_max = args.epochs
         eta_min = 0.01
-        scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=T_max, eta_min=eta_min)
+        scheduler_cls = lr_scheduler.CosineAnnealingLR(opt_cls, T_max=T_max, eta_min=eta_min)
+        scheduler_enc = lr_scheduler.CosineAnnealingLR(opt_enc, T_max=T_max, eta_min=eta_min)
     else:
-        scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+        scheduler_cls = lr_scheduler.StepLR(opt_cls, step_size=7, gamma=0.1)
+        scheduler_enc = lr_scheduler.StepLR(opt_enc, step_size=7, gamma=0.1)
         for epoch in range(0, start_epoch):
             scheduler.step()
     ############## Send model to GPU ############
