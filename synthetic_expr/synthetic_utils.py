@@ -156,7 +156,7 @@ def validate_encoder_classifier_epoch(encoder, classifier, X, Y, criterion, devi
 
             acc.update(accuracy, x_batch.size(0))
 
-            if i % args.print_freq == 0:
+            if i % print_freq == 0:
                 print('Test: [{0}/{1}]\t'
                   'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                   'Loss {loss.val:.4f} ({loss.avg:.4f})'
