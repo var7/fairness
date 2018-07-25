@@ -9,6 +9,9 @@ from torch.utils.data import Dataset, DataLoader
 import numpy as np
 import torch.nn.functional as F
 import time
+
+print_freq = 10
+
 def train_epoch(model, X, Y, opt, criterion, batch_size=64):
     model.train()
     losses = []
@@ -83,6 +86,14 @@ def train_encoder_classifier_epoch(encoder, classifier, X, Y, encoder_opt, class
         # print(accuracy)
 
         acc.update(accuracy, x_batch.size(0))
+
+        if batch_idx % print_freq == 0:
+            print('Epoch: [{0}][{1}/{2}]\t'
+                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                  'Loss {loss.val:.4f} ({loss.avg:.4f})'
+                  'Accuracy {acc.val:.4f} ({acc.avg:.4f})'.format(
+                      epoch, batch_idx, X.shape[0]/batch_size, batch_time=batch_time,
+                      loss=losses, acc=acc))
     return losses.avg, acc.avg
 
 def validate_epoch(model, X, Y, criterion, batch_size=64):
@@ -144,6 +155,14 @@ def validate_encoder_classifier_epoch(encoder, classifier, X, Y, criterion, devi
             accuracy = sum(preds == y_batch).cpu().numpy()/len(y_batch)
 
             acc.update(accuracy, x_batch.size(0))
+
+            if i % args.print_freq == 0:
+                print('Test: [{0}/{1}]\t'
+                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                  'Loss {loss.val:.4f} ({loss.avg:.4f})'
+                  'Accuracy {acc.val:.4f} ({acc.avg:.4f})'.format(
+                      epoch, batch_idx, X.shape[0]/batch_size, batch_time=batch_time,
+                      loss=losses, acc=acc))
 
     return losses.avg, acc.avg
 
