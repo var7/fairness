@@ -19,14 +19,8 @@ import torch.optim.lr_scheduler as lr_scheduler
 from torchvision import transforms, utils, models
 from torch.utils.data import Dataset, DataLoader
 ############## custom imports #############
-from dataloader import FaceScrubDataset, TripletFaceScrub, SiameseFaceScrub
-from dataloader import FaceScrubBalancedBatchSampler
-
-from networks import *
-from losses import OnlineTripletLoss
-
-from utils import *
-
+from synthetic_utils import *
+from sklearn.model_selection import train_test_split
 ############## add parser arguments #############
 parser = argparse.ArgumentParser()
 
@@ -46,7 +40,7 @@ parser.add_argument("-nc", "--no-cuda", dest='use_cuda',
 # parser.set_defaults(use_cuda=True)
 parser.add_argument("-d", "--data-path", dest="data_path",
                     help="path to data files")
-parser.add_argument("-bs", "--batch-size", default=8,
+parser.add_argument("-bs", "--batch-size", default=64,
                     dest="batch_size", type=int, help="batch size")
 parser.add_argument("-lr", "--learning-rate", default=1e-2,
                     dest="learning_rate", type=float, help="learning rate")
@@ -66,11 +60,10 @@ group = parser.add_mutually_exclusive_group()
 group.add_argument('--semi-hard', action='store_true', help='will do online selection with semi-hard negatives')
 group.add_argument('--hardest', action='store_true', help='will do online triplet selection with hardest negatives')
 
-best_loss = 1e2
-
+best_acc = 0
 
 def main():
-    global args, best_loss
+    global args, best_acc
     args = parser.parse_args()
     print(args)
 
@@ -80,31 +73,23 @@ def main():
         else:
             print('Data path: {} does not exist'.format(args.data_path))
     else:
-        DATA_PATH = '/home/s1791387/facescrub-data/new_data_max/'
-        print('No data path provided. Setting to cluster default: {}'.format(DATA_PATH))
-
-    TRAIN_PATH = os.path.join(DATA_PATH, 'train_full_with_ids.txt')
-    VALID_PATH = os.path.join(DATA_PATH, 'val_full_with_ids.txt')
-    TEST_PATH = os.path.join(DATA_PATH, 'test_full_with_ids.txt')
+        DATA_PATH = './generated_data.pkl'
+        print('No data path provided. Setting to default: {}'.format(DATA_PATH))
 
     CURR_DATE = "{}_{}_{}00hrs".format(time.strftime(
         "%b"), time.strftime("%d"), time.strftime("%H"))
     JOB_NUMBER = "{}_{}".format(
         args.job_number, CURR_DATE) if args.job_number is not None else CURR_DATE
     WEIGHTS_PATH = os.path.join(
-        DATA_PATH, 'balanced_model_weigths', 'job_{}'.format(JOB_NUMBER))
+        DATA_PATH, 'synthetic_weights', 'job_{}'.format(JOB_NUMBER))
     ############## hyper parameters #############
     batch_size = args.batch_size
-    input_size = 299
+    input_size = 96
     output_dim = 128
-    learning_rate = args.learning_rate
     num_epochs = args.epochs
     start_epoch = 0
-
-    triplet_margin = 1.  # margin
-    triplet_p = 2  # norm degree for distance calculation
-
     resume_training = args.resume
+    rs = np.random.RandomState(1791387)
     ############## data loading #############
     cuda = False
     if args.use_cuda and torch.cuda.is_available():
@@ -116,80 +101,21 @@ def main():
         device = torch.device("cpu")
 
     print('Device set: {}'.format(device))
-    print('Training set path: {}'.format(TRAIN_PATH))
-    print('Training set Path exists: {}'.format(os.path.isfile(TRAIN_PATH)))
 
-    data_transforms = {
-        'train': transforms.Compose([
-            transforms.Resize((input_size, input_size)),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-        ]),
-        'val': transforms.Compose([
-            transforms.Resize((input_size, input_size)),
-            transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-    }
+    with open(DATA_PATH, 'rb') as f:
+        imgs, shapes, colors = pickle.load(f)
 
-    train_df = FaceScrubDataset(
-        txt_file=TRAIN_PATH, root_dir=DATA_PATH, transform=data_transforms['train'])
-
-    val_df = FaceScrubDataset(
-        txt_file=VALID_PATH, root_dir=DATA_PATH, transform=data_transforms['val'])
-
-    train_batch_sampler = FaceScrubBalancedBatchSampler(
-        train_df, n_classes=args.num_classes, n_samples=args.num_samples)
-    val_batch_sampler = FaceScrubBalancedBatchSampler(
-        val_df, n_classes=args.num_classes, n_samples=args.num_samples)
-
-    print('Train data loaded from {}. Length: {}'.format(
-        TRAIN_PATH, len(train_df)))
-    print('Validation data loaded from {}. Length: {}'.format(
-        VALID_PATH, len(val_df)))
-
-    online_train_loader = torch.utils.data.DataLoader(
-        train_df, batch_sampler=train_batch_sampler, pin_memory=True, num_workers=args.workers)
-
-    print('Online train loader created. Length: {}'.format(
-        len(online_train_loader)))
-
-    online_val_loader = torch.utils.data.DataLoader(
-        val_df, batch_sampler=val_batch_sampler, pin_memory=True, num_workers=args.workers)
-    print('Online val loader created. Length: {}'.format(
-        len(online_val_loader)))
-
+    print('Imgs shape: {}, shapes shape: {}, colors shape: {}'.format(imgs.shape, shapes.shape, colors.shape))
+    imgs = imgs/255.
+    imgs_train, imgs_test, shapes_train, shapes_test, colors_train, colors_test = train_test_split(
+    imgs, shapes, colors, test_size=0.25, stratify=shapes, random_state=rs)
     ############## set up models #############
-    inception = models.inception_v3(pretrained=True)
-    inception.aux_logits = False
-    num_ftrs = inception.fc.in_features
-    inception.fc = nn.Linear(num_ftrs, output_dim)
+    encoder = LeNet()
+    classifier = ClassNet()
 
-    # tripletinception=TripletNet(inception)
-
-    params = sum(p.numel() for p in inception.parameters() if p.requires_grad)
-    print('Number of params in triplet inception: {}'.format(params))
-
-    ############## set up for training #############
-    print('Triplet margin: {}. Norm degree: {}.'.format(triplet_margin, triplet_p))
-    # loss_fn = OnlineTripletLoss(triplet_margin, RandomNegativeTripletSelector(margin))
-
-    # criterion=nn.TripletMarginLoss(margin=triplet_margin, p=triplet_p)
-    if args.semi_hard:
-        negative_selection_fn_name = "semi-hard"
-        negative_selection_fn = SemihardNegativeTripletSelector(margin=triplet_margin)
-    elif args.hardest:
-        negative_selection_fn_name = "hardest"
-        negative_selection_fn = HardestNegativeTripletSelector(margin=triplet_margin)
-    else:
-        negative_selection_fn_name = "random negative"
-        negative_selection_fn = RandomNegativeTripletSelector(margin=triplet_margin)
-    print('Triplet selection method set to {}'.format(negative_selection_fn_name))
-
-    criterion = OnlineTripletLoss(negative_selection_fn, margin=triplet_margin)
-    optimizer = optim.Adam(inception.parameters(), lr=learning_rate)
-    #
-
+    criterion = nn.BCEWithLogitsLoss()
+    opt_cls = optim.Adam(classifier.parameters(), lr=args.learning_rate, betas=(0.9, 0.999))
+    opt_enc = optim.Adam(encoder.parameters(), lr=args.learning_rate, betas=(0.9, 0.999))#
     ############## Load saved weights #############
     if resume_training:
         resume_weights = args.resume_weights
@@ -206,19 +132,17 @@ def main():
                                     loc: storage)
 
         start_epoch = checkpoint['epoch']
-        inception.load_state_dict(checkpoint['state_dict'])
-        optimizer.load_state_dict(checkpoint['optimizer'])
-        if 'best_loss' in checkpoint:
-            best_loss = checkpoint['best_loss']
-            print('Best loss loaded as {}'.format(best_loss))
+        encoder.load_state_dict(checkpoint['encoder_state'])
+        classifier.load_state_dict(checkpoint['classifier_state'])
+        opt_cls.load_state_dict(checkpoint['cls_optimizer'])
+        opt_enc.load_state_dict(checkpoint['enc_optimizer'])
+        if 'best_acc' in checkpoint:
+            best_acc = checkpoint['best_acc']
+            print('Best loss loaded as {}'.format(best_acc))
         # scheduler.load_state_dict(checkpoint['scheduler'])
         print("=> loaded checkpoint '{}' (trained for {} epochs)".format(
             resume_weights, checkpoint['epoch']))
 
-    # if args.lr_restart:
-    #     lr_epoch = -1
-    # else:
-    #     lr_epoch = start_epoch
     if args.cosine:
         T_max = args.epochs
         eta_min = 0.01
@@ -229,18 +153,14 @@ def main():
             scheduler.step()
     ############## Send model to GPU ############
     if cuda:
-        inception.cuda()
-        print('Sent model to gpu {}'.format(
-            next(inception.parameters()).is_cuda))
-        if args.multi_gpu:
-            if torch.cuda.device_count() > 1:
-                print("Using {} GPUS".format(torch.cuda.device_count()))
-                inception = nn.DataParallel(inception).cuda()
+        encoder.cuda()
+        classifier.cuda()
+        print('Sent model to gpu {} {}'.format(
+            next(encoder.parameters()).is_cuda,
+            next(classifier.parameters()).is_cuda))
     ############## Save Hyper params to file ############
     hyperparams = {
         'JOB_NUMBER': JOB_NUMBER,
-        'num_classes': args.num_classes,
-        'num_samples': args.num_samples,
         'input_size': input_size,
         'output_dim': output_dim,
         'learning_rate': learning_rate,
@@ -249,10 +169,7 @@ def main():
         'start_epoch': start_epoch,
         'optimizer': optimizer,
         'scheduler': scheduler,
-        'triplet_margin': triplet_margin,
-        'triplet_p': triplet_p,
         'criterion': criterion,
-        'negative_selection_fn': negative_selection_fn_name
     }
     save_hyperparams(hyperparams=hyperparams, path=WEIGHTS_PATH)
     ############## Training #############
@@ -267,26 +184,35 @@ def main():
         scheduler.step()
 
         # train
-        train_loss = train(online_train_loader, inception, criterion, optimizer, epoch, device)
-        train_losses.append(train_loss)
+        train_loss, train_acc = train_encoder_classifier_epoch(encoder,
+                                classifier, imgs_train, shapes_train, opt_enc,
+                                opt_cls, criterion, device)
+        # train_losses.append(np.mean(train_loss))
+        print(train_loss)
+        print(train_acc)
         # validate
         print('-'*10)
-        val_loss = validate(online_val_loader, inception, criterion, device)
+        val_loss, val_acc = validate_encoder_classifier_epoch(encoder, classifier,
+                                imgs_test, shapes_test, criterion, device)
+        print(val_loss)
+        print(val_acc)
 
-        print('Avg validation loss: {}'.format(val_loss))
-        val_losses.append(val_loss)
+        # print('Avg validation loss: {}'.format(val_loss))
+        # val_losses.append(val_loss)
 
         state = {
             'epoch': epoch,
-            'state_dict': inception.state_dict(),
-            'optimizer': optimizer.state_dict(),
+            'encoder_state': encoder.state_dict(),
+            'classifier_state': classifier.state_dict(),
+            'cls_optimizer': opt_cls.state_dict(),
+            'enc_optimizer': opt_enc.state_dict(),
             'train_losses': train_losses,
             'val_losses': val_losses,
-            'best_loss': best_loss
+            'best_acc': best_acc
             # 'scheduler': scheduler.state_dict()
         }
-        if best_loss > val_loss:
-            best_loss = val_loss
+        if best_acc > val_acc:
+            best_acc = val_acc
             MODEL_NAME = os.path.join(
                 WEIGHTS_PATH, 'weights_{}.pth'.format(epoch))
             save_checkpoint(state, True, WEIGHTS_PATH, MODEL_NAME)

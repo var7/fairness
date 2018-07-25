@@ -74,7 +74,6 @@ import pandas as pd
 
 # In[116]:
 
-
 import pickle
 with open('generated_data.pkl', 'wb') as f:
     pickle.dump([imgs, shapes, colors], f)
