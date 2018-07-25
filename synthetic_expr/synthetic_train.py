@@ -166,7 +166,7 @@ def main():
         'JOB_NUMBER': JOB_NUMBER,
         'input_size': input_size,
         'output_dim': output_dim,
-        'learning_rate': learning_rate,
+        'learning_rate': args.learning_rate,
         'num_epochs': num_epochs,
         'print_every': args.print_freq,
         'start_epoch': start_epoch,
