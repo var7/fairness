@@ -44,6 +44,7 @@ def train_encoder_classifier_epoch(encoder, classifier, X, Y, encoder_opt, class
     batch_time = AverageMeter()
     losses = AverageMeter()
     acc = AverageMeter()
+    end = time.time()
     for beg_i in range(0, X.shape[0], batch_size):
         x_batch = X[beg_i:beg_i + batch_size]
         y_batch = Y[beg_i:beg_i + batch_size]
