@@ -8,7 +8,7 @@ from torchvision import transforms, utils, models
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
 import torch.nn.functional as F
-
+import time
 def train_epoch(model, X, Y, opt, criterion, batch_size=64):
     model.train()
     losses = []

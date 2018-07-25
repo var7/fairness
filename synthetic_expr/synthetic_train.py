@@ -192,14 +192,14 @@ def main():
                                 classifier, imgs_train, shapes_train, opt_enc,
                                 opt_cls, criterion, device)
         # train_losses.append(np.mean(train_loss))
-        print(train_loss)
-        print(train_acc)
+        print(train_loss.shape)
+        # print(train_acc)
         # validate
         print('-'*10)
         val_loss, val_acc = validate_encoder_classifier_epoch(encoder, classifier,
                                 imgs_test, shapes_test, criterion, device)
-        print(val_loss)
-        print(val_acc)
+        print(val_loss.shape)
+        # print(val_acc)
 
         # print('Avg validation loss: {}'.format(val_loss))
         # val_losses.append(val_loss)
