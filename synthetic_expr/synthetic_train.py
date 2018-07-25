@@ -107,6 +107,8 @@ def main():
 
     print('Imgs shape: {}, shapes shape: {}, colors shape: {}'.format(imgs.shape, shapes.shape, colors.shape))
     imgs = imgs/255.
+    shapes = shapes.squeeze()
+    colors = colors.squeeze()
     imgs_train, imgs_test, shapes_train, shapes_test, colors_train, colors_test = train_test_split(
     imgs, shapes, colors, test_size=0.25, stratify=shapes, random_state=rs)
     ############## set up models #############

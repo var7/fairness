@@ -78,9 +78,9 @@ def train_encoder_classifier_epoch(encoder, classifier, X, Y, encoder_opt, class
 
         preds = torch.round(y_hat.data).squeeze(1).cpu().numpy()
         accuracy = sum(preds == y_batch).cpu().numpy()/len(y_batch)
-        print(y_batch)
-        print(preds)
-        print(accuracy)
+        # print(y_batch)
+        # print(preds)
+        # print(accuracy)
 
         acc.update(accuracy, x_batch.size(0))
         break
