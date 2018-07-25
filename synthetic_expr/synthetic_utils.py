@@ -78,9 +78,11 @@ def train_encoder_classifier_epoch(encoder, classifier, X, Y, encoder_opt, class
 
         preds = torch.round(y_hat.data).squeeze(1).cpu().numpy()
         accuracy = sum(preds == y_batch).cpu().numpy()/len(y_batch)
+        print(preds)
+
 
         acc.update(accuracy, x_batch.size(0))
-
+        break
     return losses.avg, acc.avg
 
 def validate_epoch(model, X, Y, criterion, batch_size=64):
@@ -184,7 +186,7 @@ class ClassNet(nn.Module):
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
-        x = self.fc2(x)
+        x = F.Sigmoid(self.fc2(x))
         return x
 
 

@@ -113,7 +113,7 @@ def main():
     encoder = LeNet()
     classifier = ClassNet()
 
-    criterion = nn.BCEWithLogitsLoss()
+    criterion = nn.BCELoss()
     opt_cls = optim.Adam(classifier.parameters(), lr=args.learning_rate, betas=(0.9, 0.999))
     opt_enc = optim.Adam(encoder.parameters(), lr=args.learning_rate, betas=(0.9, 0.999))#
     ############## Load saved weights #############
@@ -192,7 +192,7 @@ def main():
                                 classifier, imgs_train, shapes_train, opt_enc,
                                 opt_cls, criterion, device)
         # train_losses.append(np.mean(train_loss))
-        print(train_loss.shape)
+        print(train_loss)
         # print(train_acc)
         # validate
         print('-'*10)
