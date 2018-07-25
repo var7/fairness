@@ -83,7 +83,6 @@ def train_encoder_classifier_epoch(encoder, classifier, X, Y, encoder_opt, class
         # print(accuracy)
 
         acc.update(accuracy, x_batch.size(0))
-        break
     return losses.avg, acc.avg
 
 def validate_epoch(model, X, Y, criterion, batch_size=64):
