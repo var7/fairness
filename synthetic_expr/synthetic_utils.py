@@ -32,8 +32,8 @@ def train_epoch(model, X, Y, opt, criterion, batch_size=64):
 
         losses.append(loss.item())
 
-        preds = torch.round(y_hat.data).squeeze(1).numpy()
-        accuracy = sum(preds == y_batch).numpy()/len(y_batch)
+        preds = torch.round(y_hat.data).squeeze(1).cpu().numpy()
+        accuracy = sum(preds == y_batch).cpu().numpy()/len(y_batch)
 
         acc.append(accuracy)
     return losses, acc
@@ -70,8 +70,8 @@ def train_encoder_classifier_epoch(encoder, classifier, X, Y, encoder_opt, class
 
         losses.append(loss.item())
 
-        preds = torch.round(y_hat.data).squeeze(1).numpy()
-        accuracy = sum(preds == y_batch).numpy()/len(y_batch)
+        preds = torch.round(y_hat.data).squeeze(1).cpu().numpy()
+        accuracy = sum(preds == y_batch).cpu().numpy()/len(y_batch)
 
         acc.append(accuracy)
     return losses, acc
@@ -92,8 +92,8 @@ def validate_epoch(model, X, Y, criterion, batch_size=64):
             loss = criterion(y_hat, y_batch)
             losses.append(loss.item())
 
-            preds = torch.round(y_hat.data).squeeze(1).numpy()
-            accuracy = sum(preds == y_batch).numpy()/len(y_batch)
+            preds = torch.round(y_hat.data).squeeze(1).cpu().numpy()
+            accuracy = sum(preds == y_batch).cpu().numpy()/len(y_batch)
 
         acc.append(accuracy)
     return losses, acc
