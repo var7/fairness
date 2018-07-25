@@ -13,3 +13,4 @@ __pycache__/
 new_data/
 *.err
 model_weights/
+*.pkl
