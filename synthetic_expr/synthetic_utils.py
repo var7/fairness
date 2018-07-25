@@ -186,7 +186,7 @@ class ClassNet(nn.Module):
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
-        x = F.Sigmoid(self.fc2(x))
+        x = nn.Sigmoid(self.fc2(x))
         return x
 
 
