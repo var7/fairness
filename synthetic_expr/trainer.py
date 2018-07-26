@@ -525,3 +525,66 @@ def laftr_validate_dp(encoder, classifier, adversary, X, y_cls, y_adv, loss_cls,
                                                                             cls_acc=cls_en_accs, adv_acc=adv_accs))
                 
     return combined_losses.avg, cls_en_losses.avg, cls_en_accs.avg, adv_losses.avg, adv_accs.avg
+
+
+def train_classifier_epoch(encoder, classifier, X, Y, classifier_opt, criterion, device, batch_size=64):
+    '''
+    train using a previously trained encoder
+    '''
+    encoder.eval()
+    classifier.train()
+    
+    losses = AverageMeter()
+    acc = AverageMeter()
+    
+    batch_time = AverageMeter()
+    end = time.time()
+    batches = int(X.shape[0]/batch_size)
+    
+    for beg_i in range(0, X.shape[0], batch_size):
+        i = int(beg_i/batch_size)
+        x_batch = X[beg_i:beg_i + batch_size]
+        y_batch = Y[beg_i:beg_i + batch_size]
+
+        x_batch = torch.from_numpy(x_batch).to(device).float()
+        y_batch = torch.from_numpy(y_batch).to(device).float()
+
+        x_batch = x_batch.permute((0, 3, 1, 2))
+        x_batch /= 255.
+        
+        classifier_opt.zero_grad()
+        
+        with torch.no_grad():
+            z = encoder(x_batch)
+        # (1) Forward
+
+        y_hat = classifier(z)
+
+        # (2) Compute diff
+        loss = criterion(y_hat, y_batch)
+        # (3) Compute gradients
+        loss.backward()
+        # (4) update weights
+        classifier_opt.step()
+
+        batch_time.update(time.time() - end)
+        end = time.time()
+
+        # (3) Compute gradients
+        losses.update(loss.item(), x_batch.size(0))
+
+        preds = torch.round(y_hat.data).squeeze(1).cpu().numpy()
+        accuracy = sum(preds == y_batch).cpu().numpy()/len(y_batch)
+        # print(y_batch)
+        # print(preds)
+        # print(accuracy)
+
+        acc.update(accuracy, x_batch.size(0))
+        
+        if i % print_freq == 0:
+            print('Batch: [{0}/{1}]\t'
+                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
+                  'Accuracy {acc.val:.4f} ({acc.avg:.4f})'.format(i, batches, batch_time=batch_time,
+                      loss=losses, acc=acc))
+    return losses.avg, acc.avg
