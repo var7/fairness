@@ -10,7 +10,7 @@ import numpy as np
 import torch.nn.functional as F
 import time
 
-print_freq = 10
+print_freq = 100
 
 def train_epoch(model, X, Y, opt, criterion, batch_size=64):
     model.train()
