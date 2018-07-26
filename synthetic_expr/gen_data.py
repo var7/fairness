@@ -84,4 +84,6 @@ with open('generated_data.pkl', 'wb') as f:
 
 with open('generated_data.pkl', 'rb') as f:
     imgs1, shapes1, colors1 = pickle.load(f)
+    
+imgs_train 
 
