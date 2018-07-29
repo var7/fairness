@@ -14,6 +14,16 @@ from synthetic_utils import AverageMeter
 
 print_freq = 20
 
+def freeze_model(model):
+    model.eval()
+    for params in model.parameters():
+        params.requires_grad = False
+        
+def unfreeze_model(model):
+    model.train()
+    for params in model.parameters():
+        params.requires_grad = True
+        
 def train_epoch(model, X, Y, opt, criterion, batch_size=64):
     model.train()
     losses = []
@@ -211,14 +221,13 @@ def laftr_epoch(encoder, classifier, adversary, X, y_cls, y_adv, opt_en, opt_cls
         x_batch /= 255.
         
         # fix adversary take gradient step with classifier and encoder
-        encoder.train()
-        classifier.train()
+        unfreeze_model(encoder)
+        unfreeze_model(classifier)
         z = encoder(x_batch)
         y_hat = classifier(z)
 
-        adversary.eval()
-        with torch.no_grad():
-            a_fixed = adversary(z)
+        freeze_model(adversary)
+        a_fixed = adversary(z)
 
         opt_cls.zero_grad()
         opt_en.zero_grad()
@@ -234,11 +243,10 @@ def laftr_epoch(encoder, classifier, adversary, X, y_cls, y_adv, opt_en, opt_cls
         
         
         # fix encoder and classifier and take gradient step with adversary
-        encoder.eval()
-        classifier.eval()
-        with torch.no_grad():
-            z_fixed = encoder(x_batch)
-            y_hat_fixed = classifier(z_fixed)
+        freeze_model(encoder)
+        freeze_model(classifier)
+        z_fixed = encoder(x_batch)
+        y_hat_fixed = classifier(z_fixed)
         
         adversary.train()
         a_hat = adversary(z_fixed)
