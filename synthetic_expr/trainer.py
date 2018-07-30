@@ -248,7 +248,7 @@ def laftr_epoch(encoder, classifier, adversary, X, y_cls, y_adv, opt_en, opt_cls
         z_fixed = encoder(x_batch)
         y_hat_fixed = classifier(z_fixed)
         
-        adversary.train()
+        unfreeze_model(adversary)
         a_hat = adversary(z_fixed)
         
         opt_adv.zero_grad()
@@ -391,14 +391,13 @@ def laftr_epoch_dp(encoder, classifier, adversary, X, y_cls, y_adv, opt_en, opt_
         x_batch /= 255.
         
         # fix adversary take gradient step with classifier and encoder
-        encoder.train()
-        classifier.train()
+        unfreeze_model(encoder)
+        unfreeze_model(classifier)
         z = encoder(x_batch)
         y_hat = classifier(z)
-
-        adversary.eval()
-        with torch.no_grad():
-            a_fixed = adversary(z)
+        
+        freeze_model(adversary)
+        a_fixed = adversary(z)
 
         opt_cls.zero_grad()
         opt_en.zero_grad()
@@ -414,13 +413,12 @@ def laftr_epoch_dp(encoder, classifier, adversary, X, y_cls, y_adv, opt_en, opt_
         
         
         # fix encoder and classifier and take gradient step with adversary
-        encoder.eval()
-        classifier.eval()
-        with torch.no_grad():
-            z_fixed = encoder(x_batch)
-            y_hat_fixed = classifier(z_fixed)
+        freeze_model(encoder)
+        freeze_model(classifier)
+        z_fixed = encoder(x_batch)
+        y_hat_fixed = classifier(z_fixed)
         
-        adversary.train()
+        unfreeze_model(adversary)
         a_hat = adversary(z_fixed)
         
         opt_adv.zero_grad()
