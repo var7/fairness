@@ -28,7 +28,9 @@ class FaceScrubDataset(Dataset):
         self.transform = transform
         self.crop_face = crop_face
         self.pids = self.faces_frame.person_id.unique()
-
+        self.names = self.faces_frame.name.unique()
+        # self.name_to_class = dict(zip(self.names, range(len(self.names)))
+        
     def __len__(self):
         return len(self.faces_frame)
 
@@ -41,6 +43,7 @@ class FaceScrubDataset(Dataset):
         self.url = self.faces_frame.iloc[idx]['url'].encode('utf-8')
         # self.bbox = self.faces_frame.iloc[idx]['bbox']
         # self.bbox = list(map(int, self.bbox.split(',')))
+        
 
         if self.gender == 'male':
             data_path = os.path.join(self.root_dir, 'actor')

@@ -64,19 +64,19 @@ class ClassificationNet(nn.Module):
 
 class ClassNet(nn.Module):
 
-    def __init__(self, input_size=128, output_size=437, training=True, dropout_rate=0.5):
+    def __init__(self, input_size=128, output_size=1, training=True, dropout_rate=0.5):
         super(ClassNet, self).__init__()
 
-        self.fc1 = nn.Linear(input_size, 64)
+        self.fc1 = nn.Linear(input_size*2, 64)
         self.fc2 = nn.Linear(64, output_size)
         self.training = training
         self.dropout_rate = dropout_rate
 
     def forward(self, x):
-        x = F.dropout(F.relu(self.fc1(x), p=self.dropout_rate, training=self.training))
-        x = self.fc2(x)
+        x = F.dropout(F.relu(self.fc1(x)), p=self.dropout_rate, training=self.training)
+        x = (self.fc2(x))
                       
-        return F.log_softmax(x, dim=1)
+        return x
 
 class SiameseNet(nn.Module):
     def __init__(self, embedding_net):
