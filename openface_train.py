@@ -49,7 +49,7 @@ parser.add_argument("-d", "--data-path", dest="data_path",
                     help="path to data files")
 parser.add_argument("-bs", "--batch-size", default=8,
                     dest="batch_size", type=int, help="batch size")
-parser.add_argument("-lr", "--learning-rate", default=1e-2,
+parser.add_argument("-lr", "--learning-rate", default=1e-3,
                     dest="learning_rate", type=float, help="learning rate")
 parser.add_argument('--multi-gpu', dest='multi_gpu',
                     action='store_true', help='use multiple gpus')
@@ -227,7 +227,7 @@ def main():
         eta_min = 0.01
         scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=T_max, eta_min=eta_min)
     else:
-        scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+        scheduler = lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.99)
         for epoch in range(0, start_epoch):
             scheduler.step()
     ############## Send model to GPU ############

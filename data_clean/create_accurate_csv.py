@@ -63,6 +63,9 @@ def data_split(low=1, class_size=265, holdout_frac=0.2, val_test_split=0.5, seed
     train_pids = np.setdiff1d(all_pids, holdout_pids)
     return train_pids, val_pids, test_pids
 
+# def data_split_verification():
+#     pid_to_num = 
+
 
 ANNOT_ACTORS_PATH = "/home/var/facescrub/facescrub_actors.txt"
 ANNOT_ACTRESS_PATH = "/home/var/facescrub/facescrub_actresses.txt"
