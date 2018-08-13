@@ -192,12 +192,14 @@ def train(train_loader, classifier, encoder, criterion, en_optimizer, cl_optimiz
                   'Loss {loss.val:.4f} ({loss.avg:.4f})'.format(
                    epoch, batch_idx, len(train_loader), batch_time=batch_time,
                    data_time=data_time, loss=losses))
+        if batch_idx == 20:
+            break
     return losses.avg
 
 def validate(val_loader, classifier, encoder, criterion, epoch, device):
     batch_time = AverageMeter()
     losses = AverageMeter()
-    print_freq=100
+    print_freq=1
     # switch to evaluate mode
     classifier.eval()
     encoder.eval()
@@ -225,12 +227,13 @@ def validate(val_loader, classifier, encoder, criterion, epoch, device):
             batch_time.update(time.time() - end)
             end = time.time()
 
-            if i % print_freq == 0:
+            if batch_idx % print_freq == 0:
                 print('Test: [{0}/{1}]\t'
                       'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                       'Loss {loss.val:.4f} ({loss.avg:.4f})'.format(
                        batch_idx, len(val_loader), batch_time=batch_time, loss=losses))
-
+            if batch_idx == 20:
+                break
     return losses.avg
     
 print('-'*10)
@@ -257,17 +260,11 @@ for epoch in range(start_epoch, start_epoch + num_epochs):
     state = {
         'epoch': epoch,
         'state_dict': openface.state_dict(),
-        'optimizer': optimizer.state_dict(),
         'train_losses': train_losses,
         'val_losses': val_losses,
         'best_loss': best_loss
         # 'scheduler': scheduler.state_dict()
     }
-    if best_loss > val_loss:
-        best_loss = val_loss
-        MODEL_NAME = os.path.join(
-            WEIGHTS_PATH, 'weights_{}.pth'.format(epoch))
-        save_checkpoint(state, True, WEIGHTS_PATH, MODEL_NAME)
     print('-' * 20)
     epoch_time.update(time.time() - ep_end)
     ep_end = time.time()
