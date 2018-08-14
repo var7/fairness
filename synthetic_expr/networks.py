@@ -44,8 +44,8 @@ class ClassNet(nn.Module):
     def __init__(self, input_size=128):
         super(ClassNet, self).__init__()
 
-        self.fc1 = nn.Linear(input_size, 64)
-        self.fc2 = nn.Linear(64, 1)
+        self.fc1 = nn.Linear(input_size, 8)
+        self.fc2 = nn.Linear(8, 1)
         self.out_acc = nn.Sigmoid()
 
     def forward(self, x):
