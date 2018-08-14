@@ -3,7 +3,6 @@
 **/faces
 **/actresses
 *.log
-*.pdf
 **/data
 .ipynb_checkpoints/
 *ipynb_checkpoints
