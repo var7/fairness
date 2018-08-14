@@ -29,7 +29,8 @@ class FaceScrubDataset(Dataset):
         self.crop_face = crop_face
         self.pids = self.faces_frame.person_id.unique()
         self.names = self.faces_frame.name.unique()
-        # self.name_to_class = dict(zip(self.names, range(len(self.names)))
+        self.name_to_class = dict(zip(self.names, range(len(self.names))))
+        self.gender_to_class = {'male': 0, 'female': 1}
         
     def __len__(self):
         return len(self.faces_frame)
@@ -67,7 +68,8 @@ class FaceScrubDataset(Dataset):
             img = Image.open(img_path)
 
         labels = {'name': self.name, 'person_id': self.person_id,
-                  'gender': self.gender, 'face_id': self.face_id}
+                  'gender': self.gender_to_class[self.gender], 'face_id': self.face_id, 
+                  'class': self.name_to_class[self.name]}
 
         #img = Image.fromarray(img, mode='RGB')
         img = img.convert('RGB')
