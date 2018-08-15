@@ -12,7 +12,7 @@ import time
 
 from synthetic_utils import AverageMeter
 
-print_freq = 20
+print_freq = 40
 
 def freeze_model(model):
     model.eval()
@@ -466,7 +466,7 @@ def laftr_validate_dp(dataloader, encoder, classifier, adversary, loss_cls, loss
             batch_time.update(time.time() - end)
             end = time.time()
             
-            if batch_idx % print_freq == 0:
+            if batch_idx % print_freq == 0 and batch_idx > 0:
                 print('Test batch: [{0}/{1}]\t'
                       'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\n'
                       'Classifier loss {cls_loss.val:.4f} ({cls_loss.avg:.4f})\t'
@@ -562,7 +562,7 @@ def validate_classifier_epoch(dataloader, encoder, classifier, criterion, device
 
             acc.update(accuracy, imgs.size(0))
 
-            if batch_idx % print_freq == 0:
+            if batch_idx % print_freq == 0 and batch_idx > 0:
                 print('Test: [{0}/{1}]\t'
                   'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
@@ -602,7 +602,8 @@ def alfr_train(dataloader, encoder, classifier, adversary, opt_en, opt_cls, opt_
         a_hat = adversary(z)
         
         cls_loss = cls_criterion(y_hat.squeeze(), y_cls_batch)
-        adv_loss = adv_criterion(a_hat.squeeze(), y_adv_batch)
+        # adv_loss = adv_criterion(a_hat.squeeze(), y_adv_batch)
+        adv_loss = adv_criterion(a_hat, y_adv_batch)
         
         cls_preds = torch.round(y_hat.data).squeeze(1).cpu().numpy()
         cls_acc = sum(cls_preds == y_cls_batch).cpu().numpy()/len(y_cls_batch)
@@ -612,12 +613,12 @@ def alfr_train(dataloader, encoder, classifier, adversary, opt_en, opt_cls, opt_
         adv_acc = sum(adv_preds == y_adv_batch).cpu().numpy()/len(y_adv_batch)
         adv_accs.update(adv_acc, imgs.shape[0])
         
-        if (updateEncoder and adv_acc > 0.6) or (updateEncoder and cls_acc < 0.45):
+        if (updateEncoder and adv_acc > 0.6) or (updateEncoder and cls_acc < 0.5):
             print('*', end='')
             # if adv_acc < 0.6: 
             #     # print('Skipping encoder update')
             #     continue
-            combinedLoss = cls_loss - adv_loss
+            combinedLoss = cls_loss + adv_loss
             combinedLoss.backward()
             opt_en.step()
             opt_cls.step()
@@ -628,7 +629,7 @@ def alfr_train(dataloader, encoder, classifier, adversary, opt_en, opt_cls, opt_
             # if adv_acc > 0.9:
             #     # print('Skipping adv update')
             #     continue
-            combinedLoss = adv_loss - cls_loss 
+            combinedLoss = - (adv_loss + cls_loss)
             combinedLoss.backward()
             opt_adv.step()
             adv_combinedLosses.update(combinedLoss.item(), imgs.shape[0])
@@ -651,7 +652,7 @@ def alfr_train(dataloader, encoder, classifier, adversary, opt_en, opt_cls, opt_
         end = time.time()
         
         
-        if batch_idx % print_freq == 0:
+        if batch_idx % print_freq == 0 and batch_idx > 0:
                 print('\nBatch: [{0}/{1}]\t'
                       # 'Step -  Encoder: {2}\n'
                       #'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\n'
@@ -667,4 +668,4 @@ def alfr_train(dataloader, encoder, classifier, adversary, opt_en, opt_cls, opt_
                                                                             cls_acc=cls_en_accs, adv_acc=adv_accs))
         updateEncoder = not updateEncoder
         
-    return cls_losses.avg, cls_en_accs.avg, adv_losses.avg, adv_accs.avg, 0
+    return cls_losses.avg, cls_en_accs.avg, adv_losses.avg, adv_accs.avg, cls_en_combinedLosses, adv_combinedLosses
