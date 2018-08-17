@@ -3,9 +3,9 @@
 #SBATCH -n 1	  # tasks requested
 #SBATCH --gres=gpu:1
 #SBATCH --mem=16000  # memory in Mb
-#SBATCH -o ./openface_logs/cos_semi_std_%j.log  # send stdout to sample_experiment_outfile
-#SBATCH -e ./openface_logs/cos_semi_std_%j.err  # send stderr to sample_experiment_errfile
-#SBATCH -t 8:00:00  # time requested in hour:minute:secon
+#SBATCH -o ./logs/cos_semi_std_%j.log  # send stdout to sample_experiment_outfile
+#SBATCH -e ./logs/cos_semi_std_%j.err  # send stderr to sample_experiment_errfile
+#SBATCH -t 4:00:00  # time requested in hour:minute:secon
 #SBATCH -p Standard
 export CUDA_HOME=/opt/cuda-8.0.44
 
@@ -29,8 +29,8 @@ export TMPDIR=/disk/scratch/${STUDENT_ID}/
 export TMP=/disk/scratch/${STUDENT_ID}/
 # Activate the relevant virtual environment:
 
-source /home/${STUDENT_ID}/miniconda3/bin/activate fairness
+source /home/${STUDENT_ID}/miniconda3/bin/activate diss
 
 export XDG_RUNTIME_DIR=${TMPDIR}
 
-python openface_train.py -j rand_std_cos3 -e 50 --num-classes 15 --num-samples 20 --cosine -r -rw /home/s1791387/facescrub-data/new_data_max/balanced_model_weigths/job_rand_std_cos2_Jul_24_2300hrs/weights_31.pth
+python alfr_train_bce-independent.py -j 1

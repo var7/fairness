@@ -12,6 +12,7 @@ font = {'family' : 'normal',
         'size'   : 22}
 
 matplotlib.rc('font', **font)
+matplotlib.rcParams['lines.linewidth'] = 2
 
 import torch
 import torch.nn as nn
@@ -86,15 +87,15 @@ parser.add_argument("-j", "--job-number", dest="job_number",
 
 args = parser.parse_args()
 
-DATA_PATH = '/home/var/synthetic_data/dependent_gen/'
+DATA_PATH = '/home/s1791387/diss/gen_shapes/'
 TRAIN_PATH = os.path.join(DATA_PATH, 'train')
 VAL_PATH = os.path.join(DATA_PATH, 'valid')
 TEST_PATH = os.path.join(DATA_PATH, 'test')
 
-WEIGHTS_PATH = './bce_{}/weights'.format(args.job_number)
+WEIGHTS_PATH = './bce_indep_{}/weights'.format(args.job_number)
 if not os.path.exists(WEIGHTS_PATH):
     os.makedirs(WEIGHTS_PATH)
-PLT_PATH = './bce_{}/plots/'.format(args.job_number)
+PLT_PATH = './bce_indep_{}/plots/'.format(args.job_number)
 if not os.path.exists(PLT_PATH):
     os.makedirs(PLT_PATH)
 
@@ -254,7 +255,7 @@ with open(pkl_path, 'wb') as f:  # Python 3: open(..., 'wb')
 # plt.tight_layout()
 # plt.savefig(os.path.join(PLT_PATH, '1.pdf'))
 
-plt.figure(figsize=(20,20))
+plt.figure(figsize=(10,10))
 plt.title('Cls-Enc Loss')
 plt.plot(clsTrain_losses, label='Train')
 plt.plot(clsVal_losses, label='Validation')
@@ -262,7 +263,7 @@ plt.legend()
 plt.tight_layout()
 plt.savefig(os.path.join(PLT_PATH, 'cls_enc_loss.pdf'))
 
-plt.figure(figsize=(20,20))
+plt.figure(figsize=(10,10))
 plt.title('Cls-Enc Accuracy')
 plt.plot(clsTrain_accs, label='Train')
 plt.plot(clsVal_accs, label='Validation')
@@ -270,7 +271,7 @@ plt.legend()
 plt.tight_layout()
 plt.savefig(os.path.join(PLT_PATH, 'cls_enc_acc.pdf'))
 
-plt.figure(figsize=(20,20))
+plt.figure(figsize=(10,10))
 plt.title('Adv Loss')
 plt.plot(advTrain_losses, label='Train')
 plt.plot(advVal_losses, label='Validation')
@@ -278,7 +279,7 @@ plt.legend()
 plt.tight_layout()
 plt.savefig(os.path.join(PLT_PATH, 'adv_loss.pdf'))
 
-plt.figure(figsize=(20,20))
+plt.figure(figsize=(10,10))
 plt.title('Adv Accuracy')
 plt.plot(advTrain_accs, label='Train')
 plt.plot(advVal_accs, label='Validation')
@@ -286,7 +287,7 @@ plt.legend()
 plt.tight_layout()
 plt.savefig(os.path.join(PLT_PATH, 'adv_acc.pdf'))
 
-plt.figure(figsize=(20,20))
+plt.figure(figsize=(10,10))
 plt.title('Step Loss')
 plt.plot(advTrainCombined_losses, label='Adversary')
 plt.plot(clsTrainCombined_losses, label='Classifier')

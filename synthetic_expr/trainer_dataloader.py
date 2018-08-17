@@ -12,7 +12,7 @@ import time
 
 from synthetic_utils import AverageMeter
 
-print_freq = 100
+print_freq = 10
 
 def freeze_model(model):
     model.eval()
