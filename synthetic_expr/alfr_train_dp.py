@@ -7,8 +7,7 @@ import argparse
 
 plt.switch_backend('agg')
 # In[3]:
-font = {'family' : 'normal',
-        'weight' : 'bold',
+font = {'weight' : 'bold',
         'size'   : 22}
 
 matplotlib.rc('font', **font)

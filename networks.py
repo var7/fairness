@@ -105,11 +105,11 @@ class ClassNet(nn.Module):
     
 class ClassNet_nosig(nn.Module):
 
-    def __init__(self, input_size=128):
+    def __init__(self, output_size, input_size=128):
         super(ClassNet_nosig, self).__init__()
 
-        self.fc1 = nn.Linear(input_size, 8)
-        self.fc2 = nn.Linear(8, 1)
+        self.fc1 = nn.Linear(input_size, 64)
+        self.fc2 = nn.Linear(64, output_size)
 #         self.out_acc = nn.Sigmoid()
 
     def forward(self, x):
