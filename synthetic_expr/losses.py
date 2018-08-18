@@ -21,7 +21,7 @@ class AdvDemographicParityLoss(nn.Module):
             sensitive = torch.from_numpy(sensitive)
             sensitive = sensitive.float()
         
-        predicted_sensitive = predicted_sensitive.squeeze(dim=1)
+#         predicted_sensitive = predicted_sensitive.squeeze(dim=1)
         
         a0_mask = (sensitive == 0)
         a1_mask = (sensitive == 1)
@@ -58,7 +58,7 @@ class AdvEqOddsLoss(nn.Module):
             sensitive = sensitive.float()
         
         
-        predicted_sensitive = predicted_sensitive.squeeze(dim=1)
+#         predicted_sensitive = predicted_sensitive.squeeze(dim=1)
         
         a00_mask = ((targets == 0).byte() & (sensitive == 0).byte())
         a01_mask = ((targets == 1).byte() & (sensitive == 0).byte())

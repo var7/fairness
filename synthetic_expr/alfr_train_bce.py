@@ -41,9 +41,8 @@ from losses import *
 
 
 input_size = 96
-batch_size = 64
-num_workers = 4
-num_epochs = 500
+
+
 
 
 cuda = False
@@ -77,6 +76,7 @@ data_transforms = {
 }
 
 
+
 # In[9]:
 
 parser = argparse.ArgumentParser()
@@ -84,17 +84,38 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-j", "--job-number", dest="job_number",
                     help="job number to store weights")
 
-args = parser.parse_args()
+parser.add_argument("--num-epochs", default=500, type=int)
 
-DATA_PATH = '/home/var/synthetic_data/gen_shapes/'
+parser.add_argument("-bs", "--batch-size", default=64,
+                    dest="batch_size", type=int, help="batch size")
+
+parser.add_argument("--store-path", required=True)
+parser.add_argument("--no-sig", action='store_true')
+parser.add_argument("--independent", action='store_true')
+parser.add_argument("--debug", action='store_true')
+
+
+
+
+args = parser.parse_args()
+print(args)
+batch_size = args.batch_size
+num_workers = 4
+num_epochs = args.num_epochs
+
+if args.independent:
+    DATA_PATH = '/home/s1791387/diss/gen_shapes/'
+else:
+    DATA_PATH = '/home/s1791387/diss/dependent_gen/'
+print(DATA_PATH)
 TRAIN_PATH = os.path.join(DATA_PATH, 'train')
 VAL_PATH = os.path.join(DATA_PATH, 'valid')
 TEST_PATH = os.path.join(DATA_PATH, 'test')
 
-WEIGHTS_PATH = './bce_{}/weights'.format(args.job_number)
+WEIGHTS_PATH = os.path.join(args.store_path, args.job_number, 'weights')
 if not os.path.exists(WEIGHTS_PATH):
     os.makedirs(WEIGHTS_PATH)
-PLT_PATH = './bce_{}/plots/'.format(args.job_number)
+PLT_PATH = os.path.join(args.store_path, args.job_number, 'plots')
 if not os.path.exists(PLT_PATH):
     os.makedirs(PLT_PATH)
 
@@ -130,10 +151,13 @@ laftrval_loader = DataLoader(shapegender_valid, batch_size=batch_size, shuffle=T
 
 
 # In[15]:
-
-
 laftr_encoder = LeNet()
-laftr_adversary = ClassNet()
+if args.no_sig:
+    laftr_adversary = ClassNet_nosig()
+    print('Set to no sig')
+else:
+    laftr_adversary = ClassNet()
+    print('Set to plain class net')
 laftr_classifier = ClassNet()
 
 
@@ -238,7 +262,8 @@ for epoch in range(0, num_epochs):
               'Time {epoch_time.val:.3f} sec ({epoch_time.avg:.3f} sec)'.format(epoch, num_epochs, epoch_time=epoch_time))
         print('-'*20)
 
-
+        if args.debug:
+            break
 # In[ ]:
 
 pkl_path = os.path.join(PLT_PATH, 'metrics.pkl')
@@ -328,7 +353,7 @@ scheduler_adv = lr_scheduler.StepLR(optimizer=opt_adv, gamma=0.99, step_size=1)
 # In[ ]:
 
 
-num_epochs = 10
+num_epochs = 20
 train_losses = []
 train_accs = []
 val_losses = []

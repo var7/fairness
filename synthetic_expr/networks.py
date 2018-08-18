@@ -85,3 +85,18 @@ class ClassNet(nn.Module):
         x = F.leaky_relu(self.fc1(x))
         x = self.out_acc(self.fc2(x))
         return x
+    
+class ClassNet_nosig(nn.Module):
+
+    def __init__(self, input_size=128):
+        super(ClassNet_nosig, self).__init__()
+
+        self.fc1 = nn.Linear(input_size, 8)
+        self.fc2 = nn.Linear(8, 1)
+#         self.out_acc = nn.Sigmoid()
+
+    def forward(self, x):
+        x = F.leaky_relu(self.fc1(x))
+#         x = self.out_acc(self.fc2(x))
+        x = (self.fc2(x))
+        return x

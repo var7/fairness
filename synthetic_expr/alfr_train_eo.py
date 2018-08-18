@@ -41,12 +41,6 @@ from losses import *
 # In[6]:
 
 
-input_size = 96
-batch_size = 64
-num_workers = 4
-num_epochs = 500
-
-
 cuda = False
 pin_memory = False
 if torch.cuda.is_available():
@@ -62,6 +56,8 @@ print('Device set: {}'.format(device))
 
 
 # In[8]:
+input_size = 96
+
 
 
 data_transforms = {
@@ -82,20 +78,49 @@ data_transforms = {
 
 parser = argparse.ArgumentParser()
 
+parser = argparse.ArgumentParser()
+
 parser.add_argument("-j", "--job-number", dest="job_number",
                     help="job number to store weights")
 
-args = parser.parse_args()
+parser.add_argument("--num-epochs", default=500, type=int)
 
-DATA_PATH = '/home/s1791387/diss/gen_shapes/'
+parser.add_argument("-bs", "--batch-size", default=64,
+                    dest="batch_size", type=int, help="batch size")
+
+parser.add_argument("--store-path", required=True)
+parser.add_argument("--no-sig", action='store_true')
+parser.add_argument("--independent", action='store_true')
+parser.add_argument("-p", default=1, type=int)
+parser.add_argument("--debug", action='store_true')
+
+
+
+
+
+
+args = parser.parse_args()
+print(args)
+batch_size = args.batch_size
+num_workers = 4
+num_epochs = args.num_epochs
+
+if args.independent:
+    DATA_PATH = '/home/s1791387/diss/gen_shapes/'
+else:
+    DATA_PATH = '/home/s1791387/diss/dependent_gen/'
+print(DATA_PATH)
 TRAIN_PATH = os.path.join(DATA_PATH, 'train')
 VAL_PATH = os.path.join(DATA_PATH, 'valid')
 TEST_PATH = os.path.join(DATA_PATH, 'test')
 
-WEIGHTS_PATH = './bce_indep_{}/weights'.format(args.job_number)
+WEIGHTS_PATH = os.path.join(args.store_path, args.job_number, 'weights')
+
 if not os.path.exists(WEIGHTS_PATH):
     os.makedirs(WEIGHTS_PATH)
-PLT_PATH = './bce_indep_{}/plots/'.format(args.job_number)
+    
+PLT_PATH = os.path.join(args.store_path, args.job_number, 'plots')
+
 if not os.path.exists(PLT_PATH):
     os.makedirs(PLT_PATH)
 
@@ -134,15 +159,20 @@ laftrval_loader = DataLoader(shapegender_valid, batch_size=batch_size, shuffle=T
 
 
 laftr_encoder = LeNet()
-laftr_adversary = ClassNet()
+if args.no_sig:
+    laftr_adversary = ClassNet_nosig()
+    print('Set to no sig')
+else:
+    laftr_adversary = ClassNet()
+    print('Set to plain class net')
 laftr_classifier = ClassNet()
 
 
 # In[16]:
 
-
-# laftr_adv_criterion = AdvDemographicParityLoss()
-laftr_adv_criterion = nn.BCELoss()
+laftr_adv_criterion = AdvEqOddsLoss(args.p)
+# laftr_adv_criterion = nn.BCELoss()
+# laftr_adv_criterion = nn.MSELoss()
 laftr_cls_criterion = nn.BCELoss()
 
 
@@ -195,7 +225,7 @@ for epoch in range(0, num_epochs):
         laftr_scheduler_cls.step()
         laftr_scheduler_enc.step()
         
-        cls_loss, cls_en_acc, adv_loss, adv_acc, cls_en_combinedLoss, adv_combinedLoss = alfr_train_bce(laftrtrain_loader,
+        cls_loss, cls_en_acc, adv_loss, adv_acc, cls_en_combinedLoss, adv_combinedLoss = alfr_train_eo(laftrtrain_loader,
                                                         laftr_encoder, laftr_classifier, laftr_adversary, laftr_opt_enc,
                                                         laftr_opt_cls, laftr_opt_adv, 
                                                         laftr_cls_criterion, laftr_adv_criterion, device, 0.65, 0.55)
@@ -212,7 +242,7 @@ for epoch in range(0, num_epochs):
         # validate
         print('-'*10)
         
-        combinedVal_loss, clsVal_loss, clsVal_acc, advVal_loss, advVal_acc = laftr_validate_dp(laftrval_loader,
+        combinedVal_loss, clsVal_loss, clsVal_acc, advVal_loss, advVal_acc = laftr_validate(laftrval_loader,
                                                         laftr_encoder, laftr_classifier, laftr_adversary, 
                                                         laftr_cls_criterion, laftr_adv_criterion, device)
         
@@ -238,7 +268,8 @@ for epoch in range(0, num_epochs):
         print('Epoch {}/{}\t'
               'Time {epoch_time.val:.3f} sec ({epoch_time.avg:.3f} sec)'.format(epoch, num_epochs, epoch_time=epoch_time))
         print('-'*20)
-
+        if args.debug:
+            break
 
 # In[ ]:
 
@@ -329,7 +360,7 @@ scheduler_adv = lr_scheduler.StepLR(optimizer=opt_adv, gamma=0.99, step_size=1)
 # In[ ]:
 
 
-num_epochs = 10
+num_epochs = 20
 train_losses = []
 train_accs = []
 val_losses = []
