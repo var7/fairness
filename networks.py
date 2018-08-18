@@ -61,23 +61,6 @@ class ClassificationNet(nn.Module):
     def get_embedding(self, x):
         return self.nonlinear(self.embedding_net(x))
 
-
-class ClassNet(nn.Module):
-
-    def __init__(self, input_size=128, output_size=1, training=True, dropout_rate=0.5):
-        super(ClassNet, self).__init__()
-
-        self.fc1 = nn.Linear(input_size*2, 64)
-        self.fc2 = nn.Linear(64, output_size)
-        self.training = training
-        self.dropout_rate = dropout_rate
-
-    def forward(self, x):
-        x = F.dropout(F.relu(self.fc1(x)), p=self.dropout_rate, training=self.training)
-        x = (self.fc2(x))
-                      
-        return x
-
 class SiameseNet(nn.Module):
     def __init__(self, embedding_net):
         super(SiameseNet, self).__init__()
@@ -105,3 +88,32 @@ class TripletNet(nn.Module):
 
     def get_embedding(self, x):
         return self.embedding_net(x)
+
+class ClassNet(nn.Module):
+
+    def __init__(self, input_size=128):
+        super(ClassNet, self).__init__()
+
+        self.fc1 = nn.Linear(input_size, 8)
+        self.fc2 = nn.Linear(8, 1)
+        self.out_acc = nn.Sigmoid()
+
+    def forward(self, x):
+        x = F.leaky_relu(self.fc1(x))
+        x = self.out_acc(self.fc2(x))
+        return x
+    
+class ClassNet_nosig(nn.Module):
+
+    def __init__(self, input_size=128):
+        super(ClassNet_nosig, self).__init__()
+
+        self.fc1 = nn.Linear(input_size, 8)
+        self.fc2 = nn.Linear(8, 1)
+#         self.out_acc = nn.Sigmoid()
+
+    def forward(self, x):
+        x = F.leaky_relu(self.fc1(x))
+#         x = self.out_acc(self.fc2(x))
+        x = (self.fc2(x))
+        return x
