@@ -92,8 +92,8 @@ parser.add_argument("--no-sig", action='store_true')
 parser.add_argument("--independent", action='store_true')
 parser.add_argument("-p", default=1, type=int)
 parser.add_argument("--debug", action='store_true')
-
-
+parser.add_argument("--shrink", action='store_true')
+parser.add_argument("--out-layer", default=16, type=int)
 
 
 
@@ -104,10 +104,13 @@ batch_size = args.batch_size
 num_workers = 4
 num_epochs = args.num_epochs
 
+
 if args.independent:
-    DATA_PATH = '/home/s1791387/diss/gen_shapes/'
+    # DATA_PATH = '/home/s1791387/diss/gen_shapes/'
+    DATA_PATH = '/home/var/synthetic_data/gen_shapes'
 else:
-    DATA_PATH = '/home/s1791387/diss/dependent_gen/'
+    # DATA_PATH = '/home/s1791387/diss/dependent_gen/'
+    DATA_PATH = '/home/var/synthetic_data/gen_shapes'
 print(DATA_PATH)
 TRAIN_PATH = os.path.join(DATA_PATH, 'train')
 VAL_PATH = os.path.join(DATA_PATH, 'valid')
@@ -156,15 +159,26 @@ laftrval_loader = DataLoader(shapegender_valid, batch_size=batch_size, shuffle=T
 
 # In[15]:
 
-
-laftr_encoder = LeNet()
-if args.no_sig:
-    laftr_adversary = ClassNet_nosig()
-    print('Set to no sig')
+if args.shrink:
+    print('output size', args.out_layer)
+    laftr_encoder = LeNetBN_N(args.out_layer)
+    if args.no_sig:
+        laftr_adversary = ClassNet_nosigN(args.out_layer)
+        print('Set to no sig')
+    else:
+        laftr_adversary = ClassNet_N(args.out_layer)
+        print('Set to plain class net')
+    laftr_classifier = ClassNet_N(args.out_layer)
 else:
-    laftr_adversary = ClassNet()
-    print('Set to plain class net')
-laftr_classifier = ClassNet()
+    print('output size 128')
+    laftr_encoder = LeNet()
+    if args.no_sig:
+        laftr_adversary = ClassNet_nosig()
+        print('Set to no sig')
+    else:
+        laftr_adversary = ClassNet()
+        print('Set to plain class net')
+    laftr_classifier = ClassNet()
 
 
 # In[16]:
@@ -272,6 +286,10 @@ for epoch in range(0, num_epochs):
         if args.debug:
             break
 # In[ ]:
+print('SAVING WEIGHTS')
+torch.save(laftr_encoder, os.path.join(WEIGHTS_PATH, 'encoder_{}_{}.pth'.format(epoch, clsVal_acc)))
+torch.save(laftr_classifier, os.path.join(WEIGHTS_PATH, 'cls_{}_{}.pth'.format(epoch, clsVal_acc)))
+torch.save(laftr_adversary, os.path.join(WEIGHTS_PATH, 'adv_{}_{}.pth'.format(epoch, advVal_acc)))
 
 pkl_path = os.path.join(PLT_PATH, 'metrics.pkl')
 with open(pkl_path, 'wb') as f:  # Python 3: open(..., 'wb')
@@ -346,8 +364,13 @@ advval_loader = DataLoader(gender_valid, batch_size=batch_size, shuffle=True, nu
 # In[ ]:
 
 
-adversary = ClassNet()
 
+if args.shrink:
+    print('output size', args.out_layer)
+    adversary = ClassNet_N(args.out_layer)
+else:
+    print('output size 128')
+    adversary = ClassNet()
 
 # In[ ]:
 
