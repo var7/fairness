@@ -105,7 +105,7 @@ def train_encoder_classifier_epoch(dataloader, encoder, classifier, encoder_opt,
         end = time.time()
 
         # (3) Compute gradients
-        
+        losses.update(loss.item(), imgs.size(0))
 
         preds = torch.round(y_hat.data).squeeze(1).cpu().numpy()
         accuracy = sum(preds == y_batch).cpu().numpy()/len(y_batch)
