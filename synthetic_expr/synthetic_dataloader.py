@@ -27,6 +27,21 @@ class GenderDataset(Dataset):
         return img, self.colors_to_class[color]
         
 
+class ShapeDataset(Dataset):
+    
+    def __init__(self, dataset):
+        self.dataset = dataset
+#         self.colors_to_class = {'red': 1, 'green': 0}
+        
+    def __len__(self):
+        return len(self.dataset)
+    
+    def __getitem__(self, idx):
+#         color = os.path.splitext(os.path.basename(self.dataset.samples[idx][0]))[0].split('_')[1]
+        img, shape = self.dataset[idx]
+        
+        return img, shape
+    
 class ShapeGenderDataset(Dataset):
     
     def __init__(self, dataset):
