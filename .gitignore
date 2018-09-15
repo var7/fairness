@@ -13,3 +13,10 @@ new_data/
 *.err
 model_weights/
 *.pkl
+*.sh
+*.idea
+*.pth
+*.csv
+*.pdf
+*.DS_Store
+*.txt
