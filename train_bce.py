@@ -53,8 +53,8 @@ for epoch in range(num_epochs):
     UpdateEncoder = True
     for batch_num, (img, shape, color) in enumerate(train_dl):
         img = img.to(device)
-        shape = shape.float()
-        color = color.float()
+        shape = shape.float().to(device)
+        color = color.float().to(device)
         rep = encoder(img)
 
         pred_shape = classifier(rep).squeeze(1).float()
@@ -66,7 +66,7 @@ for epoch in range(num_epochs):
         if UpdateEncoder:
             print('Updating encoder')
             encoder_opt.zero_grad()
-            combined_error = classifier_error + adversary_error
+            combined_error = classifier_error - adversary_error
             combined_error.backward()
             encoder_opt.step()
             UpdateEncoder = False
@@ -79,10 +79,10 @@ for epoch in range(num_epochs):
             adversary_opt.zero_grad()
         
         classifier_preds = torch.round(pred_shape.data).cpu().numpy()
-        classifier_accuracy = sum(classifier_preds == shape.numpy())/len(shape)
+        classifier_accuracy = sum(classifier_preds == shape.cpu().numpy())/len(shape)
 
         adversary_preds = torch.round(pred_color.data).cpu().numpy()
-        adversary_accuracy = sum(adversary_preds == color.numpy())/len(color)
+        adversary_accuracy = sum(adversary_preds == color.cpu().numpy())/len(color)
 
         if batch_num % 10 == 0:
             UpdateEncoder = True
