@@ -229,9 +229,9 @@ for epoch in range(0, num_epochs):
 #         print('-'*80)
         print('Epoch: {}/{}'.format(epoch, num_epochs))
 
-        laftr_scheduler_adv.step()
-        laftr_scheduler_cls.step()
-        laftr_scheduler_enc.step()
+        # laftr_scheduler_adv.step()
+        # laftr_scheduler_cls.step()
+        # laftr_scheduler_enc.step()
         
         cls_loss, cls_en_acc, adv_loss, adv_acc, cls_en_combinedLoss, adv_combinedLoss = alfr_train_bce(laftrtrain_loader,
                                                         laftr_encoder, laftr_classifier, laftr_adversary, laftr_opt_enc,

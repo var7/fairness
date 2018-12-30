@@ -1,6 +1,7 @@
 import os
 import torch
 import pandas as pd
+from pathlib import Path
 
 import numpy as np
 import hashlib
@@ -10,6 +11,13 @@ import matplotlib
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 from torch.utils.data.sampler import BatchSampler
+
+# class ShapeColorDataset(Dataset):
+
+#     def __init__(self, path):
+#         self.root_path = Path(path)
+#         self.classes = []
+#         for glo
 
 class GenderDataset(Dataset):
     
