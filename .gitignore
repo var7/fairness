@@ -20,3 +20,6 @@ model_weights/
 *.pdf
 *.DS_Store
 *.txt
+train/
+test/
+valid/
